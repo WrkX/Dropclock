@@ -10,9 +10,22 @@
 		DD533BD42D69329200DCDAE7 /* Dropclock.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Dropclock.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		DD0048322D6A67100049E6F9 /* Exceptions for "Dropclock" folder in "Dropclock" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = DD533BD32D69329200DCDAE7 /* Dropclock */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		DD533BD62D69329200DCDAE7 /* Dropclock */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				DD0048322D6A67100049E6F9 /* Exceptions for "Dropclock" folder in "Dropclock" target */,
+			);
 			path = Dropclock;
 			sourceTree = "<group>";
 		};
@@ -255,11 +268,16 @@
 				DEVELOPMENT_ASSET_PATHS = "\"Dropclock/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Dropclock/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Dropclock;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.Wrkx.Dropclock;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -280,11 +298,16 @@
 				DEVELOPMENT_ASSET_PATHS = "\"Dropclock/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Dropclock/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Dropclock;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.Wrkx.Dropclock;
 				PRODUCT_NAME = "$(TARGET_NAME)";
