@@ -22,7 +22,7 @@ struct PreferencesView: View {
           
             // Reminders Section
             SettingsSection(title: "Reminders") {
-                SettingsRow(title: "Allow Reminders", helpText: "When enabled, Dropclock will create reminders in the Apple Reminders app for each timer created.") {
+                SettingsRow(title: "Allow Reminders", helpText: "When enabled, Dropclock will create reminders in the Apple Reminders app for each timer created. Reminders will always be rounded to the next minute due to how reminders work.") {
                     Toggle("", isOn: $viewModel.allowReminders)
                         .toggleStyle(SwitchToggleStyle())
                         .labelsHidden()
