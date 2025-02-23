@@ -1,6 +1,7 @@
 import SwiftUI
 import UserNotifications
 import EventKit
+import AppKit
 
 @main
 struct MenuBarApp: App {
@@ -32,10 +33,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   
   private var timer: Timer?
   private var activeTimers: [(id: UUID, name: String?, startTime: Date, duration: TimeInterval, timer: Timer, reminderId: String?)] = []
-  private var dragTimerWindow: NSWindow?
-  private var nameInputWindow: NSWindow?
-  private var nameInputField: NSTextField?
   private var pendingTimerData: (startTime: Date, duration: TimeInterval)?
+  
+  private var nameInputPanel: NameInputPanel?
+  private var dragTimerPanel: DragTimerPanel?
+   
   
   private var endTime: Date?
   private var menuUpdateTimer: Timer?
@@ -72,6 +74,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
       name: NSMenu.didEndTrackingNotification,
       object: nil
     )
+  }
+  
+  func applicationWillTerminate(_ notification: Notification) {
+      dragTimerPanel?.cleanup()
+      nameInputPanel?.cleanup()
   }
   
   struct SavedTimer: Codable {
@@ -282,146 +289,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   }
   
   private func showNameInputField() {
-    cleanupNameInputWindow()  // Clean up any existing window
-    
-    let mouseLoc = NSEvent.mouseLocation
-    
-    let panel = NSPanel(
-      contentRect: NSRect(x: 0, y: 0, width: 160, height: 105),
-      styleMask: [.titled, .fullSizeContentView],
-      backing: .buffered,
-      defer: false
-    )
-    
-    panel.isFloatingPanel = true
-    panel.level = .floating
-    panel.titlebarAppearsTransparent = true
-    panel.titleVisibility = .hidden
-    panel.isMovableByWindowBackground = true
-    
-    let blurView = NSVisualEffectView(frame: panel.contentView!.bounds)
-    blurView.material = .hudWindow
-    blurView.state = .active
-    blurView.wantsLayer = true
-    blurView.layer?.cornerRadius = 8
-    
-    let stackView = NSStackView(frame: blurView.bounds)
-    stackView.orientation = .vertical
-    stackView.spacing = 8
-    stackView.edgeInsets = NSEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
-    
-    let label = NSTextField(labelWithString: "Timer Name")
-    label.font = NSFont.systemFont(ofSize: 13, weight: .medium)
-    label.textColor = .secondaryLabelColor
-    label.alignment = .left
-    label.isBordered = false
-    label.drawsBackground = false
-    
-    // Text field setup
-    let textField = NSTextField(frame: NSRect(x: 0, y: 0, width: 50, height: 22))
-    textField.placeholderString = "Timer \(activeTimers.count + 1)"
-    textField.isEditable = true
-    textField.isSelectable = true
-    textField.delegate = self
-    
-    // Use the native bordered style
-    textField.isBordered = true          // Show border
-    textField.isBezeled = true             // Enable bezel style
-    textField.bezelStyle = .roundedBezel // Rounded corners
-    
-    // Default appearance settings
-    textField.drawsBackground = true
-    textField.backgroundColor = .controlBackgroundColor
-    textField.textColor = .labelColor
-    textField.focusRingType = .default
-    
-    // Remove custom layer properties
-    textField.wantsLayer = false
-    
-    
-    let buttonStack = NSStackView()
-    buttonStack.orientation = .horizontal
-    buttonStack.spacing = 8
-    buttonStack.distribution = .fillEqually
-    
-    let cancelButton = NSButton(frame: NSRect(x: 0, y: 0, width: 80, height: 22))
-    cancelButton.title = "Cancel"
-    cancelButton.bezelStyle = .rounded
-    cancelButton.target = self
-    cancelButton.action = #selector(cancelNameInput)
-    cancelButton.wantsLayer = true
-    
-    let createButton = NSButton(frame: NSRect(x: 0, y: 0, width: 80, height: 22))
-    createButton.title = "Create"
-    createButton.bezelStyle = .rounded
-    createButton.target = self
-    createButton.action = #selector(confirmNameInput)
-    createButton.keyEquivalent = "\r"  // Enter key
-    createButton.wantsLayer = true
-    
-    if #available(macOS 11.0, *) {
-      createButton.controlSize = .regular
-    } else {
-      createButton.highlight(true)
-    }
-    
-    buttonStack.addArrangedSubview(cancelButton)
-    buttonStack.addArrangedSubview(createButton)
-    
-    stackView.addArrangedSubview(label)
-    stackView.addArrangedSubview(textField)
-    stackView.addArrangedSubview(buttonStack)
-    
-    blurView.addSubview(stackView)
-    panel.contentView?.addSubview(blurView)
-    
-    stackView.translatesAutoresizingMaskIntoConstraints = false
-    NSLayoutConstraint.activate([
-      stackView.leadingAnchor.constraint(equalTo: blurView.leadingAnchor, constant: 8),
-      stackView.trailingAnchor.constraint(equalTo: blurView.trailingAnchor, constant: -8),
-      stackView.topAnchor.constraint(equalTo: blurView.topAnchor, constant: 8),
-      stackView.bottomAnchor.constraint(equalTo: blurView.bottomAnchor, constant: -8)
-    ])
-    
-    label.translatesAutoresizingMaskIntoConstraints = false
-    textField.translatesAutoresizingMaskIntoConstraints = false
-    NSLayoutConstraint.activate([
-      label.leadingAnchor.constraint(equalTo: stackView.leadingAnchor),
-      label.trailingAnchor.constraint(equalTo: stackView.trailingAnchor),
-      textField.leadingAnchor.constraint(equalTo: stackView.leadingAnchor),
-      textField.trailingAnchor.constraint(equalTo: stackView.trailingAnchor)
-    ])
-    
-    let panelOrigin = NSPoint(x: mouseLoc.x - 125, y: mouseLoc.y - 75)
-    panel.setFrameOrigin(panelOrigin)
-    
-    panel.orderFront(nil)
-    panel.makeKeyAndOrderFront(nil)
-    panel.level = .floating
-    
-    DispatchQueue.main.async {
-      NSApp.activate(ignoringOtherApps: true)
-      panel.makeFirstResponder(textField)
-    }
-    
-    nameInputWindow = panel
-    nameInputField = textField
-  }
-  
-  
-  @objc private func cancelNameInput() {
-    // Just close the window without creating any timer or reminder
-    nameInputWindow?.close()
-    nameInputWindow = nil
-    pendingTimerData = nil  // Clear any pending timer data
-  }
-  
-  // Add this method to handle the Create button action
-  @objc private func confirmNameInput() {
-    let timerName = nameInputField?.stringValue.isEmpty ?? true ? nil : nameInputField?.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-    startOneTimeTimer(name: timerName)
-    nameInputWindow?.close()
-    nameInputWindow = nil
+      nameInputPanel = NameInputPanel(delegate: self)
+      nameInputPanel?.show(at: NSEvent.mouseLocation)
   }
   
   private func updateStatusIcon() {
@@ -473,96 +342,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
       }
   }
   
-  private var dragTimerPanel: NSPanel?
-  private var timerLabel: NSTextField?
-  private var endTimeLabel: NSTextField?
-  
   private func createDragTimerPanel() {
-    removeDragTimerPanel()
-    
-    guard let screen = NSScreen.main else { return }
-    let windowSize = NSSize(width: 120, height: 50)
-    let windowOrigin = NSPoint(x: screen.frame.midX - windowSize.width / 2,
-                               y: screen.frame.midY - windowSize.height / 2)
-    
-    let panel = NSPanel(
-      contentRect: NSRect(origin: windowOrigin, size: windowSize),
-      styleMask: [.nonactivatingPanel],
-      backing: .buffered,
-      defer: false
-    )
-    
-    panel.isFloatingPanel = true
-    panel.level = .popUpMenu
-    panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-    panel.isMovable = false
-    panel.isOpaque = false
-    panel.backgroundColor = .clear
-    panel.hasShadow = true
-    
-    let blurView = NSVisualEffectView(frame: panel.contentView!.bounds)
-    blurView.material = .hudWindow
-    blurView.blendingMode = .behindWindow
-    blurView.state = .active
-    blurView.wantsLayer = true
-    blurView.layer?.cornerRadius = 12
-    blurView.layer?.masksToBounds = true
-    blurView.layer?.borderWidth = 1
-    blurView.layer?.borderColor = NSColor.secondaryLabelColor.withAlphaComponent(0.2).cgColor
-    
-    let stackView = NSStackView()
-    stackView.orientation = .vertical
-    stackView.alignment = .centerX
-    stackView.spacing = 3
-    stackView.translatesAutoresizingMaskIntoConstraints = false
-    
-    timerLabel = NSTextField(labelWithString: "00:00")
-    timerLabel?.font = NSFont.systemFont(ofSize: 16, weight: .medium)
-    timerLabel?.textColor = .white
-    timerLabel?.alignment = .center
-    timerLabel?.isBordered = false
-    timerLabel?.drawsBackground = false
-    
-    endTimeLabel = NSTextField(labelWithString: "at 12:00")
-    endTimeLabel?.font = NSFont.systemFont(ofSize: 13)
-    endTimeLabel?.textColor = .white
-    endTimeLabel?.alignment = .center
-    endTimeLabel?.isBordered = false
-    endTimeLabel?.drawsBackground = false
-    
-    stackView.addArrangedSubview(timerLabel!)
-    stackView.addArrangedSubview(endTimeLabel!)
-    
-    blurView.addSubview(stackView)
-    panel.contentView?.addSubview(blurView)
-    
-    NSLayoutConstraint.activate([
-      stackView.centerXAnchor.constraint(equalTo: blurView.centerXAnchor),
-      stackView.centerYAnchor.constraint(equalTo: blurView.centerYAnchor),
-      stackView.widthAnchor.constraint(equalTo: blurView.widthAnchor, multiplier: 0.9),
-    ])
-    
-    panel.orderFront(nil)
-    dragTimerPanel = panel
+    dragTimerPanel?.cleanup() // Cleanup any existing panel
+      dragTimerPanel = DragTimerPanel()
+      dragTimerPanel?.show()
   }
   
   private func updateDragTimerWindow(withText text: String, endTimeText: String, atPoint point: NSPoint) {
-    DispatchQueue.main.async {
-      self.timerLabel?.stringValue = text
-      self.endTimeLabel?.stringValue = "at: \(endTimeText)"
-      
-      let windowWidth = self.dragTimerPanel?.frame.width ?? 0
-      let windowHeight = self.dragTimerPanel?.frame.height ?? 0
-      let newOrigin = NSPoint(x: point.x - windowWidth / 2,
-                              y: point.y - windowHeight / 2)
-      self.dragTimerPanel?.setFrameOrigin(newOrigin)
-    }
+      dragTimerPanel?.update(timerText: text, endTimeText: endTimeText, at: point)
   }
   
   private func removeDragTimerPanel() {
-    dragTimerPanel?.close()
-    dragTimerPanel = nil
-  }
+         dragTimerPanel?.cleanup()
+         dragTimerPanel = nil
+     }
   
   private func startOneTimeTimer(name: String?) {
     if let timerData = pendingTimerData ?? (dragTimeInterval > 0 ? (Date(), dragTimeInterval) : nil) {
@@ -600,8 +393,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     pendingTimerData = nil
-    nameInputWindow?.close()
-    nameInputWindow = nil
+    nameInputPanel?.cleanup()
+    nameInputPanel = nil
   }
   
   private func timerFinished(id: UUID) {
@@ -834,26 +627,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
   }
   
-  private func cleanupNameInputWindow() {
-    nameInputWindow?.close()
-    nameInputWindow = nil
-    nameInputField = nil
-  }
 }
 
-extension AppDelegate: NSTextFieldDelegate {
-  func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
-    if commandSelector == #selector(NSResponder.insertNewline(_:)) {
-      // When Enter is pressed
-      let timerName = (control as? NSTextField)?.stringValue.isEmpty ?? true ? nil : (control as? NSTextField)?.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-      startOneTimeTimer(name: timerName)
-      nameInputWindow?.close()  // Make sure to close the window
-      return true
+// Add NameInputPanelDelegate conformance:
+extension AppDelegate: NameInputPanelDelegate {
+    func nameInputPanelDidConfirm(name: String?) {
+        startOneTimeTimer(name: name)
     }
-    if commandSelector == #selector(NSResponder.cancelOperation(_:)) {
-      cancelNameInput()
-      return true
+    
+    func nameInputPanelDidCancel() {
+        pendingTimerData = nil
     }
-    return false
-  }
 }
