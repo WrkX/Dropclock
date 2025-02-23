@@ -24,22 +24,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   
   var baseTime = Date()
   
-  private var dragTimeInterval: TimeInterval = 0
-  private var dragStartLocation: CGPoint?
+  internal var dragTimeInterval: TimeInterval = 0
+  internal var dragStartLocation: CGPoint?
   
-  private let MinuteThreshold: CGFloat = 130
-  private let ThirtySecondThreshold: CGFloat = 80
-  private let SecondThreshold: CGFloat = 50
+  internal let MinuteThreshold: CGFloat = 130
+  internal let ThirtySecondThreshold: CGFloat = 80
+  internal let SecondThreshold: CGFloat = 50
   
   private var timer: Timer?
   private var activeTimers: [(id: UUID, name: String?, startTime: Date, duration: TimeInterval, timer: Timer, reminderId: String?)] = []
-  private var pendingTimerData: (startTime: Date, duration: TimeInterval)?
+  internal var pendingTimerData: (startTime: Date, duration: TimeInterval)?
   
   private var nameInputPanel: NameInputPanel?
-  private var dragTimerPanel: DragTimerPanel?
+  internal var dragTimerPanel: DragTimerPanel?
   
   
-  private var endTime: Date?
+  internal var endTime: Date?
   private var menuUpdateTimer: Timer?
   private var isMenuOpen = false
   
@@ -79,14 +79,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   func applicationWillTerminate(_ notification: Notification) {
     dragTimerPanel?.cleanup()
     nameInputPanel?.cleanup()
-  }
-  
-  struct SavedTimer: Codable {
-    let id: String
-    let name: String?
-    let startTime: Date
-    let duration: TimeInterval
-    let reminderId: String?
   }
   
   private func saveTimers() {
@@ -191,109 +183,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
   }
   
-  private func setupDrag(for button: NSStatusBarButton) {
-    let dragRecognizer = NSPanGestureRecognizer(target: self, action: #selector(handleDrag(_:)))
-    button.addGestureRecognizer(dragRecognizer)
-  }
-  
-  @objc private func handleDrag(_ sender: NSPanGestureRecognizer) {
-    let translation = sender.translation(in: sender.view)
-    let isCtrlKeyPressed = NSEvent.modifierFlags.contains(.control)
-    
-    switch sender.state {
-    case .began:
-      baseTime = Date()
-      dragStartLocation = translation
-      
-    case .changed:
-      guard let start = dragStartLocation else { return }
-      let deltaX = abs(translation.x - start.x)
-      let deltaY = abs(translation.y - start.y)
-      let maxDelta = max(deltaX, deltaY)
-      
-      var calculatedInterval: TimeInterval = 0
-      if isCtrlKeyPressed {
-        if maxDelta >= SecondThreshold {
-          let increments = Int((maxDelta - SecondThreshold) / 5) + 1
-          calculatedInterval = TimeInterval(increments * 60 * 5)
-        } else {
-          removeDragTimerPanel()
-          calculatedInterval = 0
-        }
-      } else {
-        if maxDelta < SecondThreshold {
-          removeDragTimerPanel()
-          calculatedInterval = 0
-        } else if maxDelta < ThirtySecondThreshold {
-          let increments = Int(maxDelta - SecondThreshold) + 1
-          calculatedInterval = TimeInterval(30 + increments)
-        } else if maxDelta < MinuteThreshold {
-          let increments = Int((maxDelta - ThirtySecondThreshold) / 5)
-          calculatedInterval = TimeInterval(60 + increments * 30)
-        } else {
-          let increments = Int((maxDelta - MinuteThreshold) / 5)
-          calculatedInterval = TimeInterval(300 + increments * 60)
-        }
-      }
-      
-      dragTimeInterval = calculatedInterval
-      endTime = baseTime.addingTimeInterval(dragTimeInterval)
-      
-      let displayText: String
-      if calculatedInterval < 60 {
-        displayText = "\(Int(calculatedInterval)) sec"
-      } else if calculatedInterval < 300 {
-        let minutes = Int(calculatedInterval) / 60
-        let seconds = Int(calculatedInterval) - minutes * 60
-        displayText = "\(minutes) min \(seconds) sec"
-      } else {
-        if calculatedInterval >= 3600 {
-          let hours = Int(calculatedInterval) / 3600
-          let minutes = Int(Int(calculatedInterval) - hours * 3600) / 60
-          displayText = "\(hours) hr \(minutes) min"
-        } else {
-          let minutes = Int(calculatedInterval) / 60
-          displayText = "\(minutes) min"
-        }
-      }
-      
-      let mouseLoc = NSEvent.mouseLocation
-      
-      if maxDelta >= SecondThreshold && dragTimerPanel == nil {
-        createDragTimerPanel()
-      }
-      
-      if dragTimerPanel != nil {
-        let windowWidth = dragTimerPanel!.frame.width
-        let adjustedOrigin = NSPoint(x: mouseLoc.x - (windowWidth/2) - 10, y: mouseLoc.y)
-        updateDragTimerWindow(withText: displayText, endTimeText: formatter.string(from: endTime!), atPoint: adjustedOrigin)
-      }
-      
-    case .ended, .cancelled:
-      removeDragTimerPanel()
-      if dragTimeInterval > 0 {
-        if UserDefaults.standard.bool(forKey: "allowCustomNames") {
-          pendingTimerData = (startTime: Date(), duration: dragTimeInterval)
-          showNameInputField()
-        } else {
-          startOneTimeTimer(name: nil)
-        }
-      }
-      dragTimeInterval = 0
-      dragStartLocation = nil
-      updateStatusIcon()
-      
-    default:
-      break
-    }
-  }
-  
-  private func showNameInputField() {
+  internal func showNameInputField() {
     nameInputPanel = NameInputPanel(delegate: self)
     nameInputPanel?.show(at: NSEvent.mouseLocation)
   }
   
-  private func updateStatusIcon() {
+  internal func updateStatusIcon() {
     if activeTimers.count > 0 {
       // Use the SF Symbol as a background and overlay the count
       if let symbolImage = NSImage(systemSymbolName: "arrow.trianglehead.counterclockwise.rotate.90", accessibilityDescription: nil) {
@@ -342,22 +237,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
   }
   
-  private func createDragTimerPanel() {
+  internal func createDragTimerPanel() {
     dragTimerPanel?.cleanup() // Cleanup any existing panel
     dragTimerPanel = DragTimerPanel()
     dragTimerPanel?.show()
   }
   
-  private func updateDragTimerWindow(withText text: String, endTimeText: String, atPoint point: NSPoint) {
+  internal func updateDragTimerWindow(withText text: String, endTimeText: String, atPoint point: NSPoint) {
     dragTimerPanel?.update(timerText: text, endTimeText: endTimeText, at: point)
   }
   
-  private func removeDragTimerPanel() {
+  internal func removeDragTimerPanel() {
     dragTimerPanel?.cleanup()
     dragTimerPanel = nil
   }
   
-  private func startOneTimeTimer(name: String?) {
+  internal func startOneTimeTimer(name: String?) {
     if let timerData = pendingTimerData ?? (dragTimeInterval > 0 ? (Date(), dragTimeInterval) : nil) {
       let timerId = UUID()
       var reminderId: String? = nil
