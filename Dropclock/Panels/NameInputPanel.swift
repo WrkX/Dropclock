@@ -10,9 +10,7 @@ class NameInputPanel:NSObject {
         self.delegate = delegate
     }
     
-    func show(at point: NSPoint) {
-        cleanup()
-        
+    func show(at point: NSPoint) {        
         let panel = NSPanel(
             contentRect: NSRect(x: 0, y: 0, width: 160, height: 105),
             styleMask: [.titled, .fullSizeContentView],

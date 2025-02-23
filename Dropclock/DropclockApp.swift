@@ -184,6 +184,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   }
   
   internal func showNameInputField() {
+    nameInputPanel?.cleanup() // Add this line to cleanup the previous panel, if any
     nameInputPanel = NameInputPanel(delegate: self)
     nameInputPanel?.show(at: NSEvent.mouseLocation)
   }
