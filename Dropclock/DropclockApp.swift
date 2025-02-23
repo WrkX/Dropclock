@@ -37,7 +37,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   
   private var nameInputPanel: NameInputPanel?
   private var dragTimerPanel: DragTimerPanel?
-   
+  
   
   private var endTime: Date?
   private var menuUpdateTimer: Timer?
@@ -77,8 +77,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   }
   
   func applicationWillTerminate(_ notification: Notification) {
-      dragTimerPanel?.cleanup()
-      nameInputPanel?.cleanup()
+    dragTimerPanel?.cleanup()
+    nameInputPanel?.cleanup()
   }
   
   struct SavedTimer: Codable {
@@ -289,73 +289,73 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   }
   
   private func showNameInputField() {
-      nameInputPanel = NameInputPanel(delegate: self)
-      nameInputPanel?.show(at: NSEvent.mouseLocation)
+    nameInputPanel = NameInputPanel(delegate: self)
+    nameInputPanel?.show(at: NSEvent.mouseLocation)
   }
   
   private func updateStatusIcon() {
     if activeTimers.count > 0 {
-            // Use the SF Symbol as a background and overlay the count
-            if let symbolImage = NSImage(systemSymbolName: "arrow.trianglehead.counterclockwise.rotate.90", accessibilityDescription: nil) {
-                let symbolSize = NSSize(width: 16, height: 16) // Adjust size as needed
-                symbolImage.size = symbolSize
-
-                let text = activeTimers.count > 9 ? "+" : "\(activeTimers.count)"
-                let attributes: [NSAttributedString.Key: Any] = [
-                    .font: NSFont.systemFont(ofSize: 9, weight: .medium),
-                    .foregroundColor: NSColor.black
-                ]
-                let attributedString = NSAttributedString(string: text, attributes: attributes)
-                let textSize = attributedString.size()
-
-                let textImage = NSImage(size: textSize)
-                textImage.lockFocus()
-                attributedString.draw(at: NSPoint(x: 0, y: 0))
-                textImage.unlockFocus()
-
-                let combinedImage = NSImage(size: symbolSize)
-                combinedImage.lockFocus()
-
-                symbolImage.draw(at: NSPoint.zero, from: NSRect(origin: .zero, size: symbolSize), operation: .sourceOver, fraction: 1)
-
-                let textPosition = NSPoint(x: (symbolSize.width - textSize.width) / 2, y: (symbolSize.height - textSize.height) / 2)
-                textImage.draw(at: textPosition, from: NSRect(origin: .zero, size: textSize), operation: .sourceOver, fraction: 1)
-
-                combinedImage.unlockFocus()
-
-                statusItem?.button?.image = combinedImage
-                statusItem?.button?.title = "" // Clear any title
-            } else {
-                print("SF Symbol not found.")
-                statusItem?.button?.title = "\(activeTimers.count)"
-                statusItem?.button?.image = nil
-            }
+      // Use the SF Symbol as a background and overlay the count
+      if let symbolImage = NSImage(systemSymbolName: "arrow.trianglehead.counterclockwise.rotate.90", accessibilityDescription: nil) {
+        let symbolSize = NSSize(width: 16, height: 16) // Adjust size as needed
+        symbolImage.size = symbolSize
+        
+        let text = activeTimers.count > 9 ? "+" : "\(activeTimers.count)"
+        let attributes: [NSAttributedString.Key: Any] = [
+          .font: NSFont.systemFont(ofSize: 9, weight: .medium),
+          .foregroundColor: NSColor.black
+        ]
+        let attributedString = NSAttributedString(string: text, attributes: attributes)
+        let textSize = attributedString.size()
+        
+        let textImage = NSImage(size: textSize)
+        textImage.lockFocus()
+        attributedString.draw(at: NSPoint(x: 0, y: 0))
+        textImage.unlockFocus()
+        
+        let combinedImage = NSImage(size: symbolSize)
+        combinedImage.lockFocus()
+        
+        symbolImage.draw(at: NSPoint.zero, from: NSRect(origin: .zero, size: symbolSize), operation: .sourceOver, fraction: 1)
+        
+        let textPosition = NSPoint(x: (symbolSize.width - textSize.width) / 2, y: (symbolSize.height - textSize.height) / 2)
+        textImage.draw(at: textPosition, from: NSRect(origin: .zero, size: textSize), operation: .sourceOver, fraction: 1)
+        
+        combinedImage.unlockFocus()
+        
+        statusItem?.button?.image = combinedImage
+        statusItem?.button?.title = "" // Clear any title
       } else {
-          // Show the SF Symbol image
-          statusItem?.button?.title = "" // Clear the title
-          if let symbolImage = NSImage(systemSymbolName: "clock.arrow.trianglehead.counterclockwise.rotate.90", accessibilityDescription: nil) {
-              symbolImage.size = NSSize(width: 18, height: 18) // Adjust size as needed
-              statusItem?.button?.image = symbolImage
-          } else {
-              print("SF Symbol not found.")
-          }
+        print("SF Symbol not found.")
+        statusItem?.button?.title = "\(activeTimers.count)"
+        statusItem?.button?.image = nil
       }
+    } else {
+      // Show the SF Symbol image
+      statusItem?.button?.title = "" // Clear the title
+      if let symbolImage = NSImage(systemSymbolName: "clock.arrow.trianglehead.counterclockwise.rotate.90", accessibilityDescription: nil) {
+        symbolImage.size = NSSize(width: 18, height: 18) // Adjust size as needed
+        statusItem?.button?.image = symbolImage
+      } else {
+        print("SF Symbol not found.")
+      }
+    }
   }
   
   private func createDragTimerPanel() {
     dragTimerPanel?.cleanup() // Cleanup any existing panel
-      dragTimerPanel = DragTimerPanel()
-      dragTimerPanel?.show()
+    dragTimerPanel = DragTimerPanel()
+    dragTimerPanel?.show()
   }
   
   private func updateDragTimerWindow(withText text: String, endTimeText: String, atPoint point: NSPoint) {
-      dragTimerPanel?.update(timerText: text, endTimeText: endTimeText, at: point)
+    dragTimerPanel?.update(timerText: text, endTimeText: endTimeText, at: point)
   }
   
   private func removeDragTimerPanel() {
-         dragTimerPanel?.cleanup()
-         dragTimerPanel = nil
-     }
+    dragTimerPanel?.cleanup()
+    dragTimerPanel = nil
+  }
   
   private func startOneTimeTimer(name: String?) {
     if let timerData = pendingTimerData ?? (dragTimeInterval > 0 ? (Date(), dragTimeInterval) : nil) {
@@ -474,6 +474,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   private func updateMenu() {
     let menu = NSMenu()
     
+    
+    
     if activeTimers.count > 0 {
       menu.addItem(NSMenuItem(title: "Active Timers", action: nil, keyEquivalent: ""))
       
@@ -485,7 +487,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let menuItem = NSMenuItem()
         menuItem.representedObject = index
         
-        let customView = ImprovedHoverView(
+        let customView = HoverView(
           normalText: "\(displayName): \(formattedTime)",
           hoverText: "Delete",
           frame: NSRect(x: 0, y: 0, width: 250, height: 22),
@@ -507,112 +509,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     statusItem?.menu = menu
   }
   
-  class ImprovedHoverView: NSView {
-    private let textField = NSTextField()
-    private let normalText: String
-    private let hoverText: String
-    private weak var target: AnyObject?
-    private let action: Selector
-    private let index: Int
-    
-    init(normalText: String, hoverText: String, frame: NSRect, index: Int, target: AnyObject, action: Selector) {
-      self.normalText = normalText
-      self.hoverText = hoverText
-      self.index = index
-      self.target = target
-      self.action = action
-      super.init(frame: frame)
-      
-      setupView()
-      updateTrackingAreas()
-    }
-    
-    required init?(coder: NSCoder) {
-      fatalError("init(coder:) has not been implemented")
-    }
-    
-    private func setupView() {
-      textField.isEditable = false
-      textField.isBordered = false
-      textField.drawsBackground = false
-      textField.stringValue = normalText
-      textField.font = NSFont.systemFont(ofSize: 13)
-      textField.textColor = .labelColor
-      textField.translatesAutoresizingMaskIntoConstraints = false
-      
-      addSubview(textField)
-      
-      NSLayoutConstraint.activate([
-        textField.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 12),
-        textField.centerYAnchor.constraint(equalTo: centerYAnchor),
-        textField.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -12)
-      ])
-      
-      let clickGesture = NSClickGestureRecognizer(target: self, action: #selector(viewClicked))
-      addGestureRecognizer(clickGesture)
-    }
-    
-    @objc private func viewClicked() {
-      if let target = target {
-        let tempMenuItem = NSMenuItem()
-        tempMenuItem.representedObject = index
-        _ = target.perform(action, with: tempMenuItem)
-        
-        if let menu = enclosingMenuItem?.menu {
-          menu.cancelTracking()
-        }
-      }
-    }
-    
-    override func updateTrackingAreas() {
-      for area in trackingAreas {
-        removeTrackingArea(area)
-      }
-      
-      let options: NSTrackingArea.Options = [.mouseEnteredAndExited, .activeInActiveApp, .inVisibleRect]
-      let trackingArea = NSTrackingArea(rect: bounds, options: options, owner: self, userInfo: nil)
-      addTrackingArea(trackingArea)
-      
-      super.updateTrackingAreas()
-    }
-    
-    override func mouseEntered(with event: NSEvent) {
-      NSAnimationContext.runAnimationGroup({ context in
-        context.duration = 0.2
-        textField.animator().textColor = .systemRed
-        textField.animator().stringValue = hoverText
-      })
-    }
-    
-    override func mouseExited(with event: NSEvent) {
-      NSAnimationContext.runAnimationGroup({ context in
-        context.duration = 0.2
-        textField.animator().textColor = .labelColor
-        textField.animator().stringValue = normalText
-      })
-    }
-    
-    override func viewDidMoveToWindow() {
-      super.viewDidMoveToWindow()
-      updateTrackingAreas()
-    }
-    
-    override func viewDidMoveToSuperview() {
-      super.viewDidMoveToSuperview()
-      updateTrackingAreas()
-    }
-    
-    override func mouseMoved(with event: NSEvent) {
-      let point = convert(event.locationInWindow, from: nil)
-      if bounds.contains(point) && textField.stringValue != hoverText {
-        textField.textColor = .systemRed
-        textField.stringValue = hoverText
-      } else if !bounds.contains(point) && textField.stringValue != normalText {
-        textField.textColor = .labelColor
-        textField.stringValue = normalText
-      }
-    }
-  }
   
   private func formatTimeInterval(_ timeInterval: TimeInterval) -> String {
     let totalSeconds = Int(max(0, timeInterval))
@@ -631,11 +527,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
 // Add NameInputPanelDelegate conformance:
 extension AppDelegate: NameInputPanelDelegate {
-    func nameInputPanelDidConfirm(name: String?) {
-        startOneTimeTimer(name: name)
-    }
-    
-    func nameInputPanelDidCancel() {
-        pendingTimerData = nil
-    }
+  func nameInputPanelDidConfirm(name: String?) {
+    startOneTimeTimer(name: name)
+  }
+  
+  func nameInputPanelDidCancel() {
+    pendingTimerData = nil
+  }
 }
