@@ -9,24 +9,63 @@ class PreferencesViewModel: ObservableObject {
   @Published var deleteReminders: Bool = true
   @Published var allowCustomNames: Bool = false
   @Published var startAtLogin: Bool = false
+  @Published var ignoreShortTimers: Bool = false
+  @Published var shortTimerThresholdMinutes: Double = 1
 
   @AppStorage("selectedReminderListID") private var selectedReminderListID:
     String = ""
 
+  private struct Keys {
+    static let allowReminders = "allowReminders"
+    static let deleteReminders = "deleteReminders"
+    static let allowCustomNames = "allowCustomNames"
+    static let ignoreShortTimers = "ignoreShortTimers"
+    static let shortTimerThresholdMinutes = "shortTimerThresholdMinutes"
+    static let selectedReminderListIdentifier = "SelectedReminderListIdentifier"
+  }
+
   init() {
     loadPreferences()
     startAtLogin = SMAppService.mainApp.status == .enabled
+    loadReminderData()
+  }
+
+  private func loadReminderData() {
+    Task {
+      await ensureReminderAccessAndFetchLists()
+    }
+  }
+
+  private func ensureReminderAccessAndFetchLists() async {
+    if allowReminders {
+      await ensureReminderAccess()
+      await fetchReminderLists()
+      loadSelectedList()
+    } else {
+      await fetchReminderLists()
+      loadSelectedList()
+    }
   }
 
   func loadPreferences() {
+    allowReminders = UserDefaults.standard.bool(forKey: Keys.allowReminders)
+    deleteReminders = UserDefaults.standard.bool(forKey: Keys.deleteReminders)
+    allowCustomNames = UserDefaults.standard.bool(forKey: Keys.allowCustomNames)
+    ignoreShortTimers = UserDefaults.standard.bool(
+      forKey: Keys.ignoreShortTimers)
+    shortTimerThresholdMinutes = UserDefaults.standard.double(
+      forKey: Keys.shortTimerThresholdMinutes)
+
+  }
+
+  private func loadSelectedList() {
     if let storedList = RemindersManager.shared.fetchReminderLists().first(
       where: { $0.calendarIdentifier == selectedReminderListID })
     {
       selectedList = storedList
+    } else if reminderLists.isEmpty == false {
+      selectedList = reminderLists.first
     }
-    allowReminders = UserDefaults.standard.bool(forKey: "allowReminders")
-    deleteReminders = UserDefaults.standard.bool(forKey: "deleteReminders")
-    allowCustomNames = UserDefaults.standard.bool(forKey: "allowCustomNames")
   }
 
   func savePreferences() {
@@ -37,13 +76,16 @@ class PreferencesViewModel: ObservableObject {
     }
     if let selected = selectedList {
       UserDefaults.standard.set(
-        selected.calendarIdentifier, forKey: "SelectedReminderList")
+        selected.calendarIdentifier, forKey: Keys.selectedReminderListIdentifier
+      )
     }
-    UserDefaults.standard.set(allowReminders, forKey: "allowReminders")
-    UserDefaults.standard.set(deleteReminders, forKey: "deleteReminders")
-    UserDefaults.standard.set(allowCustomNames, forKey: "allowCustomNames")
+    UserDefaults.standard.set(allowReminders, forKey: Keys.allowReminders)
+    UserDefaults.standard.set(deleteReminders, forKey: Keys.deleteReminders)
+    UserDefaults.standard.set(allowCustomNames, forKey: Keys.allowCustomNames)
+    UserDefaults.standard.set(ignoreShortTimers, forKey: Keys.ignoreShortTimers)
+    UserDefaults.standard.set(
+      shortTimerThresholdMinutes, forKey: Keys.shortTimerThresholdMinutes)
     updateLoginItem()
-
   }
 
   func ensureReminderAccess() async {
@@ -52,15 +94,9 @@ class PreferencesViewModel: ObservableObject {
     switch status {
     case .notDetermined:
       let granted = await RemindersManager.shared.requestAccess()
-
-      Task { [weak self] in
-        guard let self = self else { return }
-
-        if granted {
-          await self.fetchReminderLists()
-        } else {
-          print("Access denied. Please enable it in System Settings.")
-        }
+      if granted {
+      } else {
+        print("Access denied. Please enable it in System Settings.")
       }
 
     case .denied:
@@ -68,7 +104,7 @@ class PreferencesViewModel: ObservableObject {
         "Reminders access denied. Ask the user to enable it in System Settings."
       )
     case .fullAccess, .writeOnly:
-      await fetchReminderLists()
+      break
     default:
       print("Unknown authorization status.")
     }
@@ -78,10 +114,6 @@ class PreferencesViewModel: ObservableObject {
     await MainActor.run { [weak self] in
       guard let self = self else { return }
       self.reminderLists = RemindersManager.shared.fetchReminderLists()
-
-      if self.selectedList == nil, let firstList = self.reminderLists.first {
-        self.selectedList = firstList
-      }
     }
   }
 
@@ -95,7 +127,7 @@ class PreferencesViewModel: ObservableObject {
     } catch {
       print(
         "Error \(startAtLogin ? "enabling" : "disabling") login item: \(error)")
-      startAtLogin.toggle() 
+      startAtLogin.toggle()
     }
   }
 }
