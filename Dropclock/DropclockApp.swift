@@ -53,7 +53,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
       updateStatusIcon()
       setupDrag(for: button)
     }
-    checkForPermission()
     loadSavedTimers()
 
     updateMenu()
@@ -300,16 +299,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
       }
 
       if UserDefaults.standard.bool(forKey: "allowReminders") {
-        let reminderTitle = name ?? "Timer \(activeTimers.count + 1)"
-        let reminderNotes =
-          "Your timer for \(Int(timerData.duration / 60)) minute(s) has finished."
-        let reminderTime = Date().addingTimeInterval(timerData.duration)
+        if !UserDefaults.standard.bool(forKey: "ignoreShortTimers")
+          || timerData.duration
+            > (UserDefaults.standard.double(
+              forKey: "shortTimerThresholdMinutes") * 60)
+        {
+          let reminderTitle = name ?? "Timer \(activeTimers.count + 1)"
+          let reminderNotes =
+            "Your timer for \(Int(timerData.duration / 60)) minute(s) has finished."
+          let reminderTime = Date().addingTimeInterval(timerData.duration)
 
-        do {
-          reminderId = try RemindersManager.shared.createReminder(
-            title: reminderTitle, notes: reminderNotes, dueDate: reminderTime)
-        } catch {
-          print("Failed to create reminder: \(error.localizedDescription)")
+          do {
+            reminderId = try RemindersManager.shared.createReminder(
+              title: reminderTitle, notes: reminderNotes, dueDate: reminderTime)
+          } catch {
+            print("Failed to create reminder: \(error.localizedDescription)")
+          }
         }
       }
 
