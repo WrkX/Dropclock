@@ -49,7 +49,6 @@ Dropclock is released under the [MIT License](LICENSE). See the `LICENSE` file f
 These are features currently being developed and planned for future releases:
 
 *   **Customizable Thresholds:** Fine-tune the drag and drop sensitivity to match your preferred timer increments.
-*   **Seconds-Only Mode:** For very short timers, a seconds-only mode will be added, and made configurable in preferences.
 *   **Automatic Update Checks:** Dropclock will automatically check for updates to ensure you are always running the latest version.
 
 ## Download
