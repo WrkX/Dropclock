@@ -53,7 +53,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
       updateStatusIcon()
       setupDrag(for: button)
     }
-    checkForPermission()
     loadSavedTimers()
 
     updateMenu()
