@@ -10,6 +10,8 @@ class PreferencesViewModel: ObservableObject {
   @Published var allowCustomNames: Bool = false
   @Published var startAtLogin: Bool = false
   @Published var ignoreShortTimers: Bool = false
+  @Published var allowSecondsMode: Bool = false
+  @Published var allowFiveMinuteMode: Bool = true
   @Published var shortTimerThresholdMinutes: Double = 1
 
   @AppStorage("selectedReminderListID") private var selectedReminderListID:
@@ -19,6 +21,8 @@ class PreferencesViewModel: ObservableObject {
     static let allowReminders = "allowReminders"
     static let deleteReminders = "deleteReminders"
     static let allowCustomNames = "allowCustomNames"
+    static let allowSecondsMode = "allowSecondsMode"
+    static let allowFiveMinuteMode = "allowFiveMinuteMode"
     static let ignoreShortTimers = "ignoreShortTimers"
     static let shortTimerThresholdMinutes = "shortTimerThresholdMinutes"
     static let selectedReminderListIdentifier = "SelectedReminderListIdentifier"
@@ -51,6 +55,8 @@ class PreferencesViewModel: ObservableObject {
     allowReminders = UserDefaults.standard.bool(forKey: Keys.allowReminders)
     deleteReminders = UserDefaults.standard.bool(forKey: Keys.deleteReminders)
     allowCustomNames = UserDefaults.standard.bool(forKey: Keys.allowCustomNames)
+    allowSecondsMode = UserDefaults.standard.bool(forKey: Keys.allowSecondsMode)
+    allowFiveMinuteMode = UserDefaults.standard.bool(forKey: Keys.allowFiveMinuteMode)
     ignoreShortTimers = UserDefaults.standard.bool(
       forKey: Keys.ignoreShortTimers)
     shortTimerThresholdMinutes = UserDefaults.standard.double(
@@ -83,6 +89,8 @@ class PreferencesViewModel: ObservableObject {
     UserDefaults.standard.set(deleteReminders, forKey: Keys.deleteReminders)
     UserDefaults.standard.set(allowCustomNames, forKey: Keys.allowCustomNames)
     UserDefaults.standard.set(ignoreShortTimers, forKey: Keys.ignoreShortTimers)
+    UserDefaults.standard.set(allowSecondsMode, forKey: Keys.allowSecondsMode)
+    UserDefaults.standard.set(allowFiveMinuteMode, forKey: Keys.allowFiveMinuteMode)
     UserDefaults.standard.set(
       shortTimerThresholdMinutes, forKey: Keys.shortTimerThresholdMinutes)
     updateLoginItem()

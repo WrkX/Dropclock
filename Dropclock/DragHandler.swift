@@ -11,6 +11,7 @@ extension AppDelegate {
   @objc internal func handleDrag(_ sender: NSPanGestureRecognizer) {
     let translation = sender.translation(in: sender.view)
     let isCtrlKeyPressed = NSEvent.modifierFlags.contains(.control)
+    let isShiftKeyPressed = NSEvent.modifierFlags.contains(.shift)
 
     switch sender.state {
     case .began:
@@ -24,10 +25,18 @@ extension AppDelegate {
       let maxDelta = max(deltaX, deltaY)
 
       var calculatedInterval: TimeInterval = 0
-      if isCtrlKeyPressed {
+      if isCtrlKeyPressed && UserDefaults.standard.bool(forKey: "allowFiveMinuteMode") {
         if maxDelta >= SecondThreshold {
           let increments = Int((maxDelta - SecondThreshold) / 5) + 1
           calculatedInterval = TimeInterval(increments * 60 * 5)
+        } else {
+          removeDragTimerPanel()
+          calculatedInterval = 0
+        }
+      } else if isShiftKeyPressed && UserDefaults.standard.bool(forKey: "allowSecondsMode") {
+        if maxDelta >= SecondThreshold {
+          let increments = Int(maxDelta - SecondThreshold) + 1
+          calculatedInterval = TimeInterval(30 + increments)
         } else {
           removeDragTimerPanel()
           calculatedInterval = 0

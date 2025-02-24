@@ -122,6 +122,34 @@ struct PreferencesView: View {
               viewModel.savePreferences()
             }
         }
+        Divider()
+        SettingsRow(
+          title: "Enable 5 Minute Mode",
+          helpText:
+            "When enabled, dragging while CTRL-Key is held down will increase in 5 minute increments."
+        ) {
+          Toggle("", isOn: $viewModel.allowFiveMinuteMode)
+            .toggleStyle(SwitchToggleStyle())
+            .labelsHidden()
+            .frame(width: 40)
+            .onChange(of: viewModel.allowFiveMinuteMode) {
+              viewModel.savePreferences()
+            }
+        }
+        Divider()
+        SettingsRow(
+                  title: "Enable Seconds Mode",
+                  helpText:
+                    "When enabled, dragging while Shift-Key is held down will only increment in seconds."
+                ) {
+                  Toggle("", isOn: $viewModel.allowSecondsMode)
+                    .toggleStyle(SwitchToggleStyle())
+                    .labelsHidden()
+                    .frame(width: 40)
+                    .onChange(of: viewModel.allowSecondsMode) {
+                      viewModel.savePreferences()
+                    }
+                }
       }
       .padding(.bottom, 20)
     }
