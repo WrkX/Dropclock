@@ -72,13 +72,13 @@ extension AppDelegate {
         let seconds = Int(calculatedInterval) - minutes * 60
         displayText = "\(minutes) min \(seconds) sec"
       } else {
-        if calculatedInterval >= 3600 {
+        if calculatedInterval <= 3600  || UserDefaults.standard.bool(forKey: "viewAsMinutes")  {
+          let minutes = Int(calculatedInterval) / 60
+          displayText = "\(minutes) min"
+        } else {
           let hours = Int(calculatedInterval) / 3600
           let minutes = Int(Int(calculatedInterval) - hours * 3600) / 60
           displayText = "\(hours) hr \(minutes) min"
-        } else {
-          let minutes = Int(calculatedInterval) / 60
-          displayText = "\(minutes) min"
         }
       }
 

@@ -13,6 +13,7 @@ class PreferencesViewModel: ObservableObject {
   @Published var allowSecondsMode: Bool = false
   @Published var allowFiveMinuteMode: Bool = true
   @Published var shortTimerThresholdMinutes: Double = 1
+  @Published var viewAsMinutes: Bool = false
 
   @AppStorage("selectedReminderListID") private var selectedReminderListID:
     String = ""
@@ -26,6 +27,7 @@ class PreferencesViewModel: ObservableObject {
     static let ignoreShortTimers = "ignoreShortTimers"
     static let shortTimerThresholdMinutes = "shortTimerThresholdMinutes"
     static let selectedReminderListIdentifier = "SelectedReminderListIdentifier"
+    static let viewAsMinutes = "viewAsMinutes"
   }
 
   init() {
@@ -57,6 +59,7 @@ class PreferencesViewModel: ObservableObject {
     allowCustomNames = UserDefaults.standard.bool(forKey: Keys.allowCustomNames)
     allowSecondsMode = UserDefaults.standard.bool(forKey: Keys.allowSecondsMode)
     allowFiveMinuteMode = UserDefaults.standard.bool(forKey: Keys.allowFiveMinuteMode)
+    viewAsMinutes = UserDefaults.standard.bool(forKey: Keys.viewAsMinutes)
     ignoreShortTimers = UserDefaults.standard.bool(
       forKey: Keys.ignoreShortTimers)
     shortTimerThresholdMinutes = UserDefaults.standard.double(
@@ -91,6 +94,7 @@ class PreferencesViewModel: ObservableObject {
     UserDefaults.standard.set(ignoreShortTimers, forKey: Keys.ignoreShortTimers)
     UserDefaults.standard.set(allowSecondsMode, forKey: Keys.allowSecondsMode)
     UserDefaults.standard.set(allowFiveMinuteMode, forKey: Keys.allowFiveMinuteMode)
+    UserDefaults.standard.set(viewAsMinutes, forKey: Keys.viewAsMinutes)
     UserDefaults.standard.set(
       shortTimerThresholdMinutes, forKey: Keys.shortTimerThresholdMinutes)
     updateLoginItem()

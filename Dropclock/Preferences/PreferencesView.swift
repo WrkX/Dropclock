@@ -101,6 +101,18 @@ struct PreferencesView: View {
                 }
             }
             .padding(.top, 10)
+          
+          SettingsSection(title: "View") {
+            SettingsRow(title: "Show time in minutes only", helpText: "When enabled, the time will be shown in minutes only and not be formatet to hours and minutes") {
+              Toggle("", isOn: $viewModel.viewAsMinutes)
+                .toggleStyle(SwitchToggleStyle())
+                .labelsHidden()
+                .frame(width: 40)
+                .onChange(of: viewModel.viewAsMinutes) {
+                    viewModel.savePreferences()
+                }
+            }
+          }
         }
     }
     
