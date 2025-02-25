@@ -21,12 +21,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     formatter.timeStyle = .short
     return formatter
   }()
-
   var baseTime = Date()
 
   internal var dragTimeInterval: TimeInterval = 0
   internal var dragStartLocation: CGPoint?
-
+  internal var dragLineView: DragLineView?
+  internal var dragLineWindow: NSWindow?
   internal let MinuteThreshold: CGFloat = 130
   internal let ThirtySecondThreshold: CGFloat = 80
   internal let SecondThreshold: CGFloat = 50
@@ -229,7 +229,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let text = activeTimers.count > 9 ? "+" : "\(activeTimers.count)"
         let attributes: [NSAttributedString.Key: Any] = [
           .font: NSFont.systemFont(ofSize: 9, weight: .medium),
-          .foregroundColor: NSColor.black,
         ]
         let attributedString = NSAttributedString(
           string: text, attributes: attributes)
