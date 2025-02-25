@@ -211,33 +211,28 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
   internal func updateStatusIcon() {
     if activeTimers.count > 0 {
-
       let symbolName: String
       if #available(macOS 15.3, *) {
         symbolName = "arrow.trianglehead.counterclockwise.rotate.90"
       } else {
         symbolName = "arrow.circlepath"
-
       }
+
       if let symbolImage = NSImage(
         systemSymbolName: symbolName,
         accessibilityDescription: nil)
       {
         let symbolSize = NSSize(width: 16, height: 16)
         symbolImage.size = symbolSize
+        symbolImage.isTemplate = true  // Ensure template image
 
         let text = activeTimers.count > 9 ? "+" : "\(activeTimers.count)"
         let attributes: [NSAttributedString.Key: Any] = [
-          .font: NSFont.systemFont(ofSize: 9, weight: .medium),
+          .font: NSFont.systemFont(ofSize: 9, weight: .medium)
         ]
         let attributedString = NSAttributedString(
           string: text, attributes: attributes)
         let textSize = attributedString.size()
-
-        let textImage = NSImage(size: textSize)
-        textImage.lockFocus()
-        attributedString.draw(at: NSPoint(x: 0, y: 0))
-        textImage.unlockFocus()
 
         let combinedImage = NSImage(size: symbolSize)
         combinedImage.lockFocus()
@@ -249,11 +244,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let textPosition = NSPoint(
           x: (symbolSize.width - textSize.width) / 2,
           y: (symbolSize.height - textSize.height) / 2)
-        textImage.draw(
-          at: textPosition, from: NSRect(origin: .zero, size: textSize),
-          operation: .sourceOver, fraction: 1)
+        attributedString.draw(at: textPosition)  // Draw attributed string directly
 
         combinedImage.unlockFocus()
+        combinedImage.isTemplate = true  // Ensure template image
 
         statusItem?.button?.image = combinedImage
         statusItem?.button?.title = ""
