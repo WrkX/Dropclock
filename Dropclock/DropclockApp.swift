@@ -404,27 +404,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     PreferencesWindowController.shared.showWindow()
   }
 
-  func checkForPermission() {
-    let notificationCenter = UNUserNotificationCenter.current()
-    notificationCenter.getNotificationSettings { settings in
-      switch settings.authorizationStatus {
-      case .authorized:
-        NotificationManager.shared.dispatchNotification()
-      case .denied:
-        return
-      case .notDetermined:
-        notificationCenter.requestAuthorization(options: [.alert, .sound]) {
-          didAllow, error in
-          if didAllow {
-            NotificationManager.shared.dispatchNotification()
-          }
-        }
-      default:
-        return
-      }
-    }
-  }
-
   @objc func quit() {
     NSApplication.shared.terminate(nil)
   }
