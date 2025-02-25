@@ -2,6 +2,7 @@ import AppKit
 import SwiftUI
 
 extension AppDelegate {
+
   internal func setupDrag(for button: NSStatusBarButton) {
     let dragRecognizer = NSPanGestureRecognizer(
       target: self, action: #selector(handleDrag(_:)))
@@ -17,6 +18,9 @@ extension AppDelegate {
     case .began:
       baseTime = Date()
       dragStartLocation = translation
+      if UserDefaults.standard.bool(forKey: "showDragIndicator") {
+        createDragLine(sender: sender)
+      }
 
     case .changed:
       guard let start = dragStartLocation else { return }
@@ -24,8 +28,11 @@ extension AppDelegate {
       let deltaY = abs(translation.y - start.y)
       let maxDelta = max(deltaX, deltaY)
 
+      // Time Calculation Logic
       var calculatedInterval: TimeInterval = 0
-      if isCtrlKeyPressed && UserDefaults.standard.bool(forKey: "allowFiveMinuteMode") {
+      if isCtrlKeyPressed
+        && UserDefaults.standard.bool(forKey: "allowFiveMinuteMode")
+      {
         if maxDelta >= SecondThreshold {
           let increments = Int((maxDelta - SecondThreshold) / 5) + 1
           calculatedInterval = TimeInterval(increments * 60 * 5)
@@ -33,7 +40,9 @@ extension AppDelegate {
           removeDragTimerPanel()
           calculatedInterval = 0
         }
-      } else if isShiftKeyPressed && UserDefaults.standard.bool(forKey: "allowSecondsMode") {
+      } else if isShiftKeyPressed
+        && UserDefaults.standard.bool(forKey: "allowSecondsMode")
+      {
         if maxDelta >= SecondThreshold {
           let increments = Int(maxDelta - SecondThreshold) + 1
           calculatedInterval = TimeInterval(30 + increments)
@@ -68,13 +77,15 @@ extension AppDelegate {
         let seconds = Int(calculatedInterval) - minutes * 60
         displayText = "\(minutes) min \(seconds) sec"
       } else {
-        if calculatedInterval >= 3600 {
+        if calculatedInterval <= 3600
+          || UserDefaults.standard.bool(forKey: "viewAsMinutes")
+        {
+          let minutes = Int(calculatedInterval) / 60
+          displayText = "\(minutes) min"
+        } else {
           let hours = Int(calculatedInterval) / 3600
           let minutes = Int(Int(calculatedInterval) - hours * 3600) / 60
           displayText = "\(hours) hr \(minutes) min"
-        } else {
-          let minutes = Int(calculatedInterval) / 60
-          displayText = "\(minutes) min"
         }
       }
 
@@ -93,8 +104,11 @@ extension AppDelegate {
           atPoint: adjustedOrigin)
       }
 
+      updateDragLine(sender: sender)
+
     case .ended, .cancelled:
       removeDragTimerPanel()
+      removeDragLine()
       if dragTimeInterval > 0 {
         if UserDefaults.standard.bool(forKey: "allowCustomNames") {
           pendingTimerData = (startTime: Date(), duration: dragTimeInterval)
@@ -109,6 +123,54 @@ extension AppDelegate {
 
     default:
       break
+    }
+  }
+
+  private func createDragLine(sender: NSPanGestureRecognizer) {
+    guard let button = sender.view as? NSStatusBarButton,
+      let screen = NSScreen.main
+    else { return }
+
+    let buttonFrame = button.window!.frame
+    let startPoint = NSPoint(x: buttonFrame.midX, y: buttonFrame.midY)
+    let endPoint = NSEvent.mouseLocation
+
+    // Create a new window
+    dragLineWindow = NSWindow(
+      contentRect: screen.frame, styleMask: .borderless, backing: .buffered,
+      defer: false)
+    dragLineWindow?.backgroundColor = .clear
+
+    dragLineWindow?.ignoresMouseEvents = true  // Allow clicks to pass through
+    dragLineWindow?.makeKeyAndOrderFront(nil)
+
+    dragLineView = DragLineView(frame: screen.frame)
+    dragLineView?.startPoint = startPoint
+    dragLineView?.endPoint = endPoint
+    dragLineWindow?.level = .statusBar  // Use statusBar level
+    dragLineView?.wantsLayer = true
+    dragLineView?.layer?.zPosition = CGFloat(Float.greatestFiniteMagnitude)
+
+    dragLineWindow?.contentView?.addSubview(dragLineView!)
+    dragLineView?.update(start: startPoint, end: endPoint)
+  }
+
+  private func updateDragLine(sender: NSPanGestureRecognizer) {
+    guard let lineView = dragLineView, NSScreen.main != nil,
+      let button = sender.view as? NSStatusBarButton
+    else { return }
+
+    let buttonFrame = button.window!.frame
+    let startPoint = NSPoint(x: buttonFrame.midX, y: buttonFrame.midY)
+    let endPoint = NSEvent.mouseLocation
+
+    lineView.update(start: startPoint, end: endPoint)
+  }
+
+  private func removeDragLine() {
+    DispatchQueue.main.async {
+      self.dragLineView?.removeFromSuperview()
+      self.dragLineView = nil
     }
   }
 }

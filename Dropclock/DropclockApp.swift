@@ -21,12 +21,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     formatter.timeStyle = .short
     return formatter
   }()
-
   var baseTime = Date()
 
   internal var dragTimeInterval: TimeInterval = 0
   internal var dragStartLocation: CGPoint?
-
+  internal var dragLineView: DragLineView?
+  internal var dragLineWindow: NSWindow?
   internal let MinuteThreshold: CGFloat = 130
   internal let ThirtySecondThreshold: CGFloat = 80
   internal let SecondThreshold: CGFloat = 50
@@ -53,6 +53,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
       updateStatusIcon()
       setupDrag(for: button)
     }
+    NotificationManager.shared.checkForPermission()
     loadSavedTimers()
 
     updateMenu()
@@ -210,26 +211,28 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
   internal func updateStatusIcon() {
     if activeTimers.count > 0 {
+      let symbolName: String
+      if #available(macOS 15.3, *) {
+        symbolName = "arrow.trianglehead.counterclockwise.rotate.90"
+      } else {
+        symbolName = "arrow.circlepath"
+      }
+
       if let symbolImage = NSImage(
-        systemSymbolName: "arrow.trianglehead.counterclockwise.rotate.90",
+        systemSymbolName: symbolName,
         accessibilityDescription: nil)
       {
         let symbolSize = NSSize(width: 16, height: 16)
         symbolImage.size = symbolSize
+        symbolImage.isTemplate = true  // Ensure template image
 
         let text = activeTimers.count > 9 ? "+" : "\(activeTimers.count)"
         let attributes: [NSAttributedString.Key: Any] = [
-          .font: NSFont.systemFont(ofSize: 9, weight: .medium),
-          .foregroundColor: NSColor.black,
+          .font: NSFont.systemFont(ofSize: 9, weight: .medium)
         ]
         let attributedString = NSAttributedString(
           string: text, attributes: attributes)
         let textSize = attributedString.size()
-
-        let textImage = NSImage(size: textSize)
-        textImage.lockFocus()
-        attributedString.draw(at: NSPoint(x: 0, y: 0))
-        textImage.unlockFocus()
 
         let combinedImage = NSImage(size: symbolSize)
         combinedImage.lockFocus()
@@ -241,11 +244,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let textPosition = NSPoint(
           x: (symbolSize.width - textSize.width) / 2,
           y: (symbolSize.height - textSize.height) / 2)
-        textImage.draw(
-          at: textPosition, from: NSRect(origin: .zero, size: textSize),
-          operation: .sourceOver, fraction: 1)
+        attributedString.draw(at: textPosition)  // Draw attributed string directly
 
         combinedImage.unlockFocus()
+        combinedImage.isTemplate = true  // Ensure template image
 
         statusItem?.button?.image = combinedImage
         statusItem?.button?.title = ""
@@ -256,8 +258,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
       }
     } else {
       statusItem?.button?.title = ""
+      let symbolName: String
+      if #available(macOS 15.3, *) {
+        symbolName = "clock.arrow.trianglehead.counterclockwise.rotate.90"
+      } else {
+        symbolName = "clock.arrow.circlepath"
+      }
       if let symbolImage = NSImage(
-        systemSymbolName: "clock.arrow.trianglehead.counterclockwise.rotate.90",
+        systemSymbolName: symbolName,
         accessibilityDescription: nil)
       {
         symbolImage.size = NSSize(width: 18, height: 18)
@@ -387,27 +395,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
   @objc func preferences() {
     PreferencesWindowController.shared.showWindow()
-  }
-
-  func checkForPermission() {
-    let notificationCenter = UNUserNotificationCenter.current()
-    notificationCenter.getNotificationSettings { settings in
-      switch settings.authorizationStatus {
-      case .authorized:
-        NotificationManager.shared.dispatchNotification()
-      case .denied:
-        return
-      case .notDetermined:
-        notificationCenter.requestAuthorization(options: [.alert, .sound]) {
-          didAllow, error in
-          if didAllow {
-            NotificationManager.shared.dispatchNotification()
-          }
-        }
-      default:
-        return
-      }
-    }
   }
 
   @objc func quit() {

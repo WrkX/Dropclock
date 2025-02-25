@@ -39,7 +39,7 @@ class DragTimerPanel {
     blurView.blendingMode = .behindWindow
     blurView.state = .active
     blurView.wantsLayer = true
-    blurView.layer?.cornerRadius = 12
+    blurView.layer?.cornerRadius = 8
     blurView.layer?.masksToBounds = true
     blurView.layer?.borderWidth = 1
     blurView.layer?.borderColor =

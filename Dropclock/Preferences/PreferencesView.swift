@@ -1,10 +1,96 @@
 import EventKit
 import SwiftUI
 
+enum PreferenceTab {
+  case general
+  case reminders
+  case timers
+}
+
 struct PreferencesView: View {
   @StateObject private var viewModel = PreferencesViewModel()
+  @State private var selectedTab: PreferenceTab = .general
+  @State private var hoverStates: [PreferenceTab: Bool] = [:]
 
   var body: some View {
+    VStack(spacing: 0) {
+      HStack(spacing: 0) {
+        ForEach(
+          [
+            (tab: PreferenceTab.general, icon: "gearshape", label: "General"),
+            (
+              tab: PreferenceTab.reminders, icon: "bell.fill",
+              label: "Reminders"
+            ),
+            (tab: PreferenceTab.timers, icon: "timer", label: "Timers"),
+          ], id: \.tab
+        ) { tabInfo in
+          Button {
+            selectedTab = tabInfo.tab
+          } label: {
+            ZStack {
+              Color.clear
+                .contentShape(Rectangle())
+                .overlay(
+                  Group {
+                    if hoverStates[tabInfo.tab] ?? false {
+                      Color.gray.opacity(0.1)
+                    } else if selectedTab == tabInfo.tab {
+                      Color.blue.opacity(0.2)
+                    } else {
+                      Color.clear
+                    }
+                  }
+                )
+
+              VStack(spacing: 4) {
+                Image(systemName: tabInfo.icon)
+                  .font(.system(size: 16))
+                Text(tabInfo.label)
+                  .font(.system(size: 10))
+              }
+              .padding(.vertical, 8)
+            }
+            .frame(height: 50)
+            .frame(minWidth: 60)
+            .foregroundColor(selectedTab == tabInfo.tab ? .blue : .gray)
+          }
+          .buttonStyle(BorderlessButtonStyle())
+          .cornerRadius(8)
+          .onHover { hover in
+            hoverStates[tabInfo.tab] = hover
+          }
+        }
+      }
+      .padding(.horizontal)
+      .padding(.top)
+      ScrollView {
+        VStack {
+          switch selectedTab {
+          case .general:
+            generalSettingsView
+          case .reminders:
+            reminderSettingsView
+          case .timers:
+            timerSettingsView
+          }
+        }
+        .padding()
+      }
+    }
+    .onAppear {
+      viewModel.loadPreferences()
+    }
+    .onChange(of: viewModel.allowReminders) { _, newValue in
+      if newValue {
+        Task {
+          await viewModel.ensureReminderAccess()
+        }
+      }
+    }
+  }
+
+  var generalSettingsView: some View {
     VStack(spacing: 20) {
       SettingsSection(title: "General") {
         SettingsRow(
@@ -19,8 +105,70 @@ struct PreferencesView: View {
               viewModel.savePreferences()
             }
         }
-      }.padding(.top, 10)
+      }
+      .padding(.top, 10)
 
+      SettingsSection(title: "View") {
+        SettingsRow(
+          title: "Show time in minutes only",
+          helpText:
+            "When enabled, the time will be shown in minutes only and not be formatet to hours and minutes"
+        ) {
+          Toggle("", isOn: $viewModel.viewAsMinutes)
+            .toggleStyle(SwitchToggleStyle())
+            .labelsHidden()
+            .frame(width: 40)
+            .onChange(of: viewModel.viewAsMinutes) {
+              viewModel.savePreferences()
+            }
+        }
+        SettingsRow(
+          title: "Show Rubberband",
+          helpText:
+            "When enabled, a rubberband will be shown from the menubar icon to the mouse cursor"
+        ) {
+          Toggle("", isOn: $viewModel.showDragIndicator)
+            .toggleStyle(SwitchToggleStyle())
+            .labelsHidden()
+            .frame(width: 40)
+            .onChange(of: viewModel.showDragIndicator) {
+              viewModel.savePreferences()
+            }
+        }
+        if viewModel.showDragIndicator {
+          HStack {
+            SettingsRow(
+              title: "Change Rubberband Color",
+              helpText: "When enabled, a rubberband can be manually set"
+            ) {
+              Toggle("", isOn: $viewModel.changeRubberbandColor)
+                .toggleStyle(SwitchToggleStyle())
+                .labelsHidden()
+                .frame(width: 40)
+                .onChange(of: viewModel.changeRubberbandColor) {
+                  viewModel.savePreferences()
+                }
+            }
+          }
+          if viewModel.changeRubberbandColor {
+            HStack {
+              SettingsRow(
+                title: "Rubberband Color",
+                helpText: "Select the color of the rubberband."
+              ) {
+                ColorPicker("", selection: $viewModel.dragLineColor)
+                  .frame(width: 40, alignment: .trailing)
+              }
+            }
+          }
+        }
+
+      }
+    }
+  }
+
+  var reminderSettingsView: some View {
+    VStack(spacing: 20) {
       SettingsSection(title: "Reminders") {
         SettingsRow(
           title: "Allow Reminders",
@@ -83,31 +231,33 @@ struct PreferencesView: View {
             .labelsHidden()
             .frame(width: 40)
             .disabled(!viewModel.allowReminders)
-            .onChange(of: viewModel.allowReminders) {
+            .onChange(of: viewModel.ignoreShortTimers) {
               viewModel.savePreferences()
             }
         }
-        if viewModel.ignoreShortTimers && viewModel.allowReminders {  // Conditionally show slider
 
+        if viewModel.ignoreShortTimers && viewModel.allowReminders {
           HStack {
             Slider(
               value: $viewModel.shortTimerThresholdMinutes,
-              in: 1...60,  // Range from 1 to 60 minutes
+              in: 1...60,
               step: 1
             )
             .frame(width: 250, alignment: .leading)
             .padding(.bottom, 15)
-            .onChange(of: viewModel.shortTimerThresholdMinutes) {  // ADD THIS .onChange MODIFIER
-              viewModel.savePreferences()  // Call savePreferences when slider changes
+            .onChange(of: viewModel.shortTimerThresholdMinutes) {
+              viewModel.savePreferences()
             }
-            Text("\(Int(viewModel.shortTimerThresholdMinutes)) min")  // Display current value
+            Text("\(Int(viewModel.shortTimerThresholdMinutes)) min")
               .frame(width: 50, alignment: .trailing)
           }
-
         }
-
       }
+    }
+  }
 
+  var timerSettingsView: some View {
+    VStack(spacing: 20) {
       SettingsSection(title: "Timers") {
         SettingsRow(
           title: "Custom Timer Names",
@@ -122,7 +272,9 @@ struct PreferencesView: View {
               viewModel.savePreferences()
             }
         }
+
         Divider()
+
         SettingsRow(
           title: "Enable 5 Minute Mode",
           helpText:
@@ -136,33 +288,24 @@ struct PreferencesView: View {
               viewModel.savePreferences()
             }
         }
+
         Divider()
+
         SettingsRow(
-                  title: "Enable Seconds Mode",
-                  helpText:
-                    "When enabled, dragging while Shift-Key is held down will only increment in seconds."
-                ) {
-                  Toggle("", isOn: $viewModel.allowSecondsMode)
-                    .toggleStyle(SwitchToggleStyle())
-                    .labelsHidden()
-                    .frame(width: 40)
-                    .onChange(of: viewModel.allowSecondsMode) {
-                      viewModel.savePreferences()
-                    }
-                }
-      }
-      .padding(.bottom, 20)
-    }
-    .padding()
-    .onAppear {
-      viewModel.loadPreferences()
-    }
-    .onChange(of: viewModel.allowReminders) { _, newValue in
-      if newValue {
-        Task {
-          await viewModel.ensureReminderAccess()
+          title: "Enable Seconds Mode",
+          helpText:
+            "When enabled, dragging while Shift-Key is held down will only increment in seconds."
+        ) {
+          Toggle("", isOn: $viewModel.allowSecondsMode)
+            .toggleStyle(SwitchToggleStyle())
+            .labelsHidden()
+            .frame(width: 40)
+            .onChange(of: viewModel.allowSecondsMode) {
+              viewModel.savePreferences()
+            }
         }
       }
+      .padding(.bottom, 20)
     }
   }
 }
