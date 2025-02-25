@@ -25,7 +25,9 @@ extension AppDelegate {
       let maxDelta = max(deltaX, deltaY)
 
       var calculatedInterval: TimeInterval = 0
-      if isCtrlKeyPressed && UserDefaults.standard.bool(forKey: "allowFiveMinuteMode") {
+      if isCtrlKeyPressed
+        && UserDefaults.standard.bool(forKey: "allowFiveMinuteMode")
+      {
         if maxDelta >= SecondThreshold {
           let increments = Int((maxDelta - SecondThreshold) / 5) + 1
           calculatedInterval = TimeInterval(increments * 60 * 5)
@@ -33,7 +35,9 @@ extension AppDelegate {
           removeDragTimerPanel()
           calculatedInterval = 0
         }
-      } else if isShiftKeyPressed && UserDefaults.standard.bool(forKey: "allowSecondsMode") {
+      } else if isShiftKeyPressed
+        && UserDefaults.standard.bool(forKey: "allowSecondsMode")
+      {
         if maxDelta >= SecondThreshold {
           let increments = Int(maxDelta - SecondThreshold) + 1
           calculatedInterval = TimeInterval(30 + increments)
