@@ -211,8 +211,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
   internal func updateStatusIcon() {
     if activeTimers.count > 0 {
+      
+      let symbolName: String
+      if #available(macOS 15.0, *) {
+          symbolName = "arrow.trianglehead.counterclockwise.rotate.90"
+      } else {
+          symbolName = "arrow.circlepath"
+        
+      }
       if let symbolImage = NSImage(
-        systemSymbolName: "arrow.trianglehead.counterclockwise.rotate.90",
+        systemSymbolName: symbolName,
         accessibilityDescription: nil)
       {
         let symbolSize = NSSize(width: 16, height: 16)
@@ -257,8 +265,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
       }
     } else {
       statusItem?.button?.title = ""
+      let symbolName: String
+      if #available(macOS 15.0, *) {
+          symbolName = "clock.arrow.trianglehead.counterclockwise.rotate.90"
+      } else {
+          symbolName = "clock.arrow.circlepath"
+      }
       if let symbolImage = NSImage(
-        systemSymbolName: "clock.arrow.trianglehead.counterclockwise.rotate.90",
+        systemSymbolName: symbolName,
         accessibilityDescription: nil)
       {
         symbolImage.size = NSSize(width: 18, height: 18)
