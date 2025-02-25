@@ -21,9 +21,9 @@ struct SettingsSection<Content: View>: View {
         content()
       }
       .background(Color(NSColor.windowBackgroundColor))
-      .cornerRadius(6)
+      .cornerRadius(8)
       .overlay(
-        RoundedRectangle(cornerRadius: 6)
+        RoundedRectangle(cornerRadius: 8)
           .strokeBorder(
             Color(NSColor.controlColor.withSystemEffect(.disabled)),
             lineWidth: 1, antialiased: true)
