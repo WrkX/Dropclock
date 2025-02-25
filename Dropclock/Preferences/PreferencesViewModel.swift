@@ -14,6 +14,13 @@ class PreferencesViewModel: ObservableObject {
   @Published var allowFiveMinuteMode: Bool = true
   @Published var shortTimerThresholdMinutes: Double = 1
   @Published var viewAsMinutes: Bool = false
+  @Published var showDragIndicator: Bool = true
+  @Published var changeRubberbandColor: Bool = false
+  @Published var dragLineColor: Color = Color.white {
+    didSet {
+      saveDragLineColor()
+    }
+  }
 
   @AppStorage("selectedReminderListID") private var selectedReminderListID:
     String = ""
@@ -28,6 +35,9 @@ class PreferencesViewModel: ObservableObject {
     static let shortTimerThresholdMinutes = "shortTimerThresholdMinutes"
     static let selectedReminderListIdentifier = "SelectedReminderListIdentifier"
     static let viewAsMinutes = "viewAsMinutes"
+    static let showDragIndicator = "showDragIndicator"
+    static let changeRubberbandColor = "changeRubberbandColor"
+    static let dragLineColor = "dragLineColor"
   }
 
   init() {
@@ -58,13 +68,23 @@ class PreferencesViewModel: ObservableObject {
     deleteReminders = UserDefaults.standard.bool(forKey: Keys.deleteReminders)
     allowCustomNames = UserDefaults.standard.bool(forKey: Keys.allowCustomNames)
     allowSecondsMode = UserDefaults.standard.bool(forKey: Keys.allowSecondsMode)
-    allowFiveMinuteMode = UserDefaults.standard.bool(forKey: Keys.allowFiveMinuteMode)
+    allowFiveMinuteMode = UserDefaults.standard.bool(
+      forKey: Keys.allowFiveMinuteMode)
     viewAsMinutes = UserDefaults.standard.bool(forKey: Keys.viewAsMinutes)
+    showDragIndicator = UserDefaults.standard.bool(
+      forKey: Keys.showDragIndicator)
+    changeRubberbandColor = UserDefaults.standard.bool(
+      forKey: Keys.changeRubberbandColor)
     ignoreShortTimers = UserDefaults.standard.bool(
       forKey: Keys.ignoreShortTimers)
     shortTimerThresholdMinutes = UserDefaults.standard.double(
       forKey: Keys.shortTimerThresholdMinutes)
-
+    if let colorData = UserDefaults.standard.data(forKey: "dragLineColor"),
+      let color = try? NSKeyedUnarchiver.unarchivedObject(
+        ofClass: NSColor.self, from: colorData)
+    {
+      dragLineColor = Color(nsColor: color)
+    }
   }
 
   private func loadSelectedList() {
@@ -93,11 +113,16 @@ class PreferencesViewModel: ObservableObject {
     UserDefaults.standard.set(allowCustomNames, forKey: Keys.allowCustomNames)
     UserDefaults.standard.set(ignoreShortTimers, forKey: Keys.ignoreShortTimers)
     UserDefaults.standard.set(allowSecondsMode, forKey: Keys.allowSecondsMode)
-    UserDefaults.standard.set(allowFiveMinuteMode, forKey: Keys.allowFiveMinuteMode)
+    UserDefaults.standard.set(
+      allowFiveMinuteMode, forKey: Keys.allowFiveMinuteMode)
     UserDefaults.standard.set(viewAsMinutes, forKey: Keys.viewAsMinutes)
+    UserDefaults.standard.set(showDragIndicator, forKey: Keys.showDragIndicator)
+    UserDefaults.standard.set(
+      changeRubberbandColor, forKey: Keys.changeRubberbandColor)
     UserDefaults.standard.set(
       shortTimerThresholdMinutes, forKey: Keys.shortTimerThresholdMinutes)
     updateLoginItem()
+    saveDragLineColor()
   }
 
   func ensureReminderAccess() async {
@@ -119,6 +144,15 @@ class PreferencesViewModel: ObservableObject {
       break
     default:
       print("Unknown authorization status.")
+    }
+  }
+
+  private func saveDragLineColor() {
+    let nsColor = NSColor(dragLineColor)
+    if let colorData = try? NSKeyedArchiver.archivedData(
+      withRootObject: nsColor, requiringSecureCoding: false)
+    {
+      UserDefaults.standard.set(colorData, forKey: "dragLineColor")
     }
   }
 

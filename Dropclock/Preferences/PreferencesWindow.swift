@@ -12,7 +12,7 @@ class PreferencesWindowController: NSWindowController {
       contentViewController: hostingController
     )
     window.title = "Dropblock Preferences"
-    window.setContentSize(NSSize(width: 400, height: 330))
+    window.setContentSize(NSSize(width: 400, height: 400))
     window.minSize = NSSize(width: 400, height: 200)
     window.styleMask = [.titled, .closable]
     window.isReleasedWhenClosed = false
