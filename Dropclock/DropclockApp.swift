@@ -213,7 +213,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     if activeTimers.count > 0 {
 
       let symbolName: String
-      if #available(macOS 15.0, *) {
+      if #available(macOS 15.3, *) {
         symbolName = "arrow.trianglehead.counterclockwise.rotate.90"
       } else {
         symbolName = "arrow.circlepath"
@@ -266,7 +266,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     } else {
       statusItem?.button?.title = ""
       let symbolName: String
-      if #available(macOS 15.0, *) {
+      if #available(macOS 15.3, *) {
         symbolName = "clock.arrow.trianglehead.counterclockwise.rotate.90"
       } else {
         symbolName = "clock.arrow.circlepath"
