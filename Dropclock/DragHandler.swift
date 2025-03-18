@@ -141,13 +141,13 @@ extension AppDelegate {
       defer: false)
     dragLineWindow?.backgroundColor = .clear
 
-    dragLineWindow?.ignoresMouseEvents = true  // Allow clicks to pass through
+    dragLineWindow?.ignoresMouseEvents = true
     dragLineWindow?.makeKeyAndOrderFront(nil)
 
     dragLineView = DragLineView(frame: screen.frame)
     dragLineView?.startPoint = startPoint
     dragLineView?.endPoint = endPoint
-    dragLineWindow?.level = .statusBar  // Use statusBar level
+    dragLineWindow?.level = .statusBar
     dragLineView?.wantsLayer = true
     dragLineView?.layer?.zPosition = CGFloat(Float.greatestFiniteMagnitude)
 

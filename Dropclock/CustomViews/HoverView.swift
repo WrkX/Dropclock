@@ -68,7 +68,7 @@ class HoverView: NSView {
     }
 
     let options: NSTrackingArea.Options = [
-      .mouseEnteredAndExited, .activeInActiveApp, .inVisibleRect,
+      .mouseEnteredAndExited, .activeAlways, .inVisibleRect,
     ]
     let trackingArea = NSTrackingArea(
       rect: bounds, options: options, owner: self, userInfo: nil)

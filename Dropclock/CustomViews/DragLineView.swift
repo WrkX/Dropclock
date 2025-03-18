@@ -6,8 +6,6 @@ class DragLineView: NSView {
 
   override func draw(_ dirtyRect: NSRect) {
     super.draw(dirtyRect)
-
-    // Draw the line
     let linePath = NSBezierPath()
     linePath.move(to: startPoint)
     linePath.line(to: endPoint)
