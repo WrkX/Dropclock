@@ -44,13 +44,6 @@ I appreciate your contributions to make Dropclock a better tool for everyone.
 
 Dropclock is released under the [MIT License](LICENSE). See the `LICENSE` file for more details.
 
-## Future Enhancements (Work in Progress)
-
-These are features currently being developed and planned for future releases:
-
-*   **Customizable Thresholds:** Fine-tune the drag and drop sensitivity to match your preferred timer increments.
-*   **Automatic Update Checks:** Dropclock will automatically check for updates to ensure you are always running the latest version.
-
 ## Download
 
 [Download the latest version of Dropclock here](https://github.com/wrkx/Dropclock/releases/latest)
