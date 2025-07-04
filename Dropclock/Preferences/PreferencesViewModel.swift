@@ -16,6 +16,44 @@ class PreferencesViewModel: ObservableObject {
   @Published var viewAsMinutes: Bool = false
   @Published var showDragIndicator: Bool = true
   @Published var changeRubberbandColor: Bool = false
+  @Published var customMenuBarWord: String = ""
+  @Published var useCustomMenuBarIcon: Bool = false {
+    didSet {
+      if useCustomMenuBarIcon {
+        if useAlternativeMenuBarIcon {
+          useAlternativeMenuBarIcon = false
+        }
+        if useCustomMenuBarSymbol {
+          useCustomMenuBarSymbol = false
+        }
+      }
+    }
+  }
+  @Published var customMenuBarSymbol: String = ""
+  @Published var useCustomMenuBarSymbol: Bool = false {
+    didSet {
+      if useCustomMenuBarSymbol {
+        if useAlternativeMenuBarIcon {
+          useAlternativeMenuBarIcon = false
+        }
+        if useCustomMenuBarIcon {
+          useCustomMenuBarIcon = false
+        }
+      }
+    }
+  }
+  @Published var useAlternativeMenuBarIcon: Bool = false {
+    didSet {
+      if useAlternativeMenuBarIcon {
+        if useCustomMenuBarIcon {
+          useCustomMenuBarIcon = false
+        }
+        if useCustomMenuBarSymbol {
+          useCustomMenuBarSymbol = false
+        }
+      }
+    }
+  }
   @Published var dragLineColor: Color = Color.white {
     didSet {
       saveDragLineColor()
@@ -38,6 +76,11 @@ class PreferencesViewModel: ObservableObject {
     static let showDragIndicator = "showDragIndicator"
     static let changeRubberbandColor = "changeRubberbandColor"
     static let dragLineColor = "dragLineColor"
+    static let useCustomMenuBarSymbol = "useCustomMenuBarSymbol"
+    static let customMenuBarSymbol = "customMenuBarSymbol"
+    static let useCustomMenuBarIcon = "useCustomMenuBarIcon"
+    static let customMenuBarWord = "customMenuBarWord"
+    static let useAlternativeMenuBarIcon = "useAlternativeMenuBarIcon"
   }
 
   init() {
@@ -85,6 +128,11 @@ class PreferencesViewModel: ObservableObject {
     {
       dragLineColor = Color(nsColor: color)
     }
+    useCustomMenuBarIcon = UserDefaults.standard.bool(forKey: Keys.useCustomMenuBarIcon)
+    useAlternativeMenuBarIcon = UserDefaults.standard.bool(forKey: Keys.useAlternativeMenuBarIcon)
+    customMenuBarWord = UserDefaults.standard.string(forKey: Keys.customMenuBarWord) ?? ""
+    customMenuBarSymbol = UserDefaults.standard.string(forKey: Keys.customMenuBarSymbol) ?? ""
+    useCustomMenuBarSymbol = UserDefaults.standard.bool(forKey: Keys.useCustomMenuBarSymbol)
   }
 
   private func loadSelectedList() {
@@ -121,6 +169,11 @@ class PreferencesViewModel: ObservableObject {
       changeRubberbandColor, forKey: Keys.changeRubberbandColor)
     UserDefaults.standard.set(
       shortTimerThresholdMinutes, forKey: Keys.shortTimerThresholdMinutes)
+    UserDefaults.standard.set(useCustomMenuBarIcon, forKey: Keys.useCustomMenuBarIcon)
+    UserDefaults.standard.set(customMenuBarWord, forKey: Keys.customMenuBarWord)
+    UserDefaults.standard.set(useAlternativeMenuBarIcon, forKey: Keys.useAlternativeMenuBarIcon)
+    UserDefaults.standard.set(useCustomMenuBarSymbol, forKey: Keys.useCustomMenuBarSymbol)
+    UserDefaults.standard.set(customMenuBarSymbol, forKey: Keys.customMenuBarSymbol)
     updateLoginItem()
     saveDragLineColor()
   }
