@@ -105,6 +105,68 @@ struct PreferencesView: View {
               viewModel.savePreferences()
             }
         }
+        SettingsRow(
+          title: "Alternative Menu Bar Icon",
+          helpText: "Changes the menu bar icon to a different style."
+        ) {
+          Toggle("", isOn: $viewModel.useAlternativeMenuBarIcon)
+            .toggleStyle(SwitchToggleStyle())
+            .labelsHidden()
+            .frame(width: 40)
+            .onChange(of: viewModel.useAlternativeMenuBarIcon) {
+              viewModel.savePreferences()
+            }
+        }
+        SettingsRow(
+          title: "Custom Menu Bar Text",
+          helpText: "Changes the menu bar icon to text."
+        ) {
+          Toggle("", isOn: $viewModel.useCustomMenuBarIcon)
+            .toggleStyle(SwitchToggleStyle())
+            .labelsHidden()
+            .frame(width: 40)
+            .onChange(of: viewModel.useCustomMenuBarIcon) {
+              viewModel.savePreferences()
+            }
+        }
+        if viewModel.useCustomMenuBarIcon {
+          SettingsRow(
+            title: "Custom Menu Bar Text",
+            helpText: "Enter custom text for the menu bar icon."
+          ) {
+            TextField("Enter text", text: $viewModel.customMenuBarWord)
+              .textFieldStyle(RoundedBorderTextFieldStyle())
+              .frame(width: 100)
+              .onChange(of: viewModel.customMenuBarWord) {
+                viewModel.savePreferences()
+              }
+          }
+        }
+        SettingsRow(
+          title: "Custom Menu Bar Symbol",
+          helpText: "Changes the menu bar icon to a custom SF Symbol."
+        ) {
+          Toggle("", isOn: $viewModel.useCustomMenuBarSymbol)
+            .toggleStyle(SwitchToggleStyle())
+            .labelsHidden()
+            .frame(width: 40)
+            .onChange(of: viewModel.useCustomMenuBarSymbol) {
+              viewModel.savePreferences()
+            }
+        }
+        if viewModel.useCustomMenuBarSymbol {
+          SettingsRow(
+            title: "Custom Menu Bar Symbol Name",
+            helpText: "Enter the name of the SF Symbol."
+          ) {
+            TextField("Enter text", text: $viewModel.customMenuBarSymbol)
+              .textFieldStyle(RoundedBorderTextFieldStyle())
+              .frame(width: 100)
+              .onChange(of: viewModel.customMenuBarSymbol) {
+                viewModel.savePreferences()
+              }
+          }
+        }
       }
       .padding(.top, 10)
 
