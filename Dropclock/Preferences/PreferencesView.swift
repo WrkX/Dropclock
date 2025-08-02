@@ -106,6 +106,18 @@ struct PreferencesView: View {
             }
         }
         SettingsRow(
+          title: "Show next timer in menu bar",
+          helpText: "Shows the next timer in the menu bar. Replaces Icon"
+        ) {
+          Toggle("", isOn: $viewModel.showNextTimerInMenuBar)
+            .toggleStyle(SwitchToggleStyle())
+            .labelsHidden()
+            .frame(width: 40)
+            .onChange(of: viewModel.showNextTimerInMenuBar) {
+              viewModel.savePreferences()
+            }
+        }
+        SettingsRow(
           title: "Alternative Menu Bar Icon",
           helpText: "Changes the menu bar icon to a different style."
         ) {

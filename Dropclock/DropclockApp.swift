@@ -31,6 +31,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   internal let ThirtySecondThreshold: CGFloat = 80
   internal let SecondThreshold: CGFloat = 50
   
+  private var statusIconUpdateTimer: Timer?
   private var timer: Timer?
   private var activeTimers:
   [(
@@ -58,10 +59,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     updateMenu()
     
-    Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
-      self?.baseTime = Date()
-      self?.updateStatusIcon()
-    }
+    startStatusIconUpdateTimer()
     
     startMenuUpdateTimer()
     
@@ -210,6 +208,39 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   }
   
   internal func updateStatusIcon() {
+    if UserDefaults.standard.bool(forKey: "showNextTimerInMenuBar") && activeTimers.count > 0 {
+      
+      let nextTimer = activeTimers.min { timer1, timer2 in
+        let endTime1 = timer1.startTime.addingTimeInterval(timer1.duration)
+        let endTime2 = timer2.startTime.addingTimeInterval(timer2.duration)
+        return endTime1 < endTime2
+      }
+      
+      if let timer = nextTimer {
+        let now = Date()
+        let endTime = timer.startTime.addingTimeInterval(timer.duration)
+        let remainingTime = endTime.timeIntervalSince(now)
+        
+        if remainingTime > 0 {
+          let formattedTime = formatTimeInterval(remainingTime)
+          let displayName = timer.name ?? "Timer"
+          let truncatedName = displayName.count > 15
+          ? String(displayName.prefix(12)) + "…"
+          : displayName
+          let displayText = "\(truncatedName): \(formattedTime)"
+          
+          statusItem?.button?.image = nil
+          statusItem?.button?.title = displayText
+          
+          if let button = statusItem?.button {
+            button.font = NSFont.systemFont(ofSize: 13, weight: .medium)
+          }
+          
+          return
+        }
+      }
+    }
+    
     if UserDefaults.standard.bool(forKey: "useCustomMenuBarSymbol") || UserDefaults.standard.bool(forKey: "useAlternativeMenuBarIcon") {
       statusItem?.button?.title = ""
       let symbolName: String
@@ -319,6 +350,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   internal func removeDragTimerPanel() {
     dragTimerPanel?.cleanup()
     dragTimerPanel = nil
+  }
+  
+  private func startStatusIconUpdateTimer() {
+    statusIconUpdateTimer?.invalidate()
+    if UserDefaults.standard.bool(forKey: "showNextTimerInMenuBar") {
+      statusIconUpdateTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+        self?.baseTime = Date()
+        self?.updateStatusIcon()
+      }
+    } else {
+      statusIconUpdateTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
+        self?.baseTime = Date()
+        self?.updateStatusIcon()
+      }
+    }
   }
   
   internal func startOneTimeTimer(name: String?) {
