@@ -59,7 +59,7 @@ class PreferencesViewModel: ObservableObject {
       saveDragLineColor()
     }
   }
-  @Published var showNextTimerInMenuBar: Bool = true
+  @Published var showNextTimerInMenuBar: Bool = false
 
   @AppStorage("selectedReminderListID") private var selectedReminderListID:
     String = ""
@@ -87,7 +87,6 @@ class PreferencesViewModel: ObservableObject {
 
   init() {
     loadPreferences()
-    showNextTimerInMenuBar = true
     startAtLogin = SMAppService.mainApp.status == .enabled
     loadReminderData()
   }
