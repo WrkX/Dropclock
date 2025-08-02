@@ -59,6 +59,7 @@ class PreferencesViewModel: ObservableObject {
       saveDragLineColor()
     }
   }
+  @Published var showNextTimerInMenuBar: Bool = true
 
   @AppStorage("selectedReminderListID") private var selectedReminderListID:
     String = ""
@@ -81,10 +82,12 @@ class PreferencesViewModel: ObservableObject {
     static let useCustomMenuBarIcon = "useCustomMenuBarIcon"
     static let customMenuBarWord = "customMenuBarWord"
     static let useAlternativeMenuBarIcon = "useAlternativeMenuBarIcon"
+    static let showNextTimerInMenuBar = "showNextTimerInMenuBar"
   }
 
   init() {
     loadPreferences()
+    showNextTimerInMenuBar = true
     startAtLogin = SMAppService.mainApp.status == .enabled
     loadReminderData()
   }
@@ -133,6 +136,7 @@ class PreferencesViewModel: ObservableObject {
     customMenuBarWord = UserDefaults.standard.string(forKey: Keys.customMenuBarWord) ?? ""
     customMenuBarSymbol = UserDefaults.standard.string(forKey: Keys.customMenuBarSymbol) ?? ""
     useCustomMenuBarSymbol = UserDefaults.standard.bool(forKey: Keys.useCustomMenuBarSymbol)
+    showNextTimerInMenuBar = UserDefaults.standard.bool(forKey: Keys.showNextTimerInMenuBar)
   }
 
   private func loadSelectedList() {
@@ -174,6 +178,7 @@ class PreferencesViewModel: ObservableObject {
     UserDefaults.standard.set(useAlternativeMenuBarIcon, forKey: Keys.useAlternativeMenuBarIcon)
     UserDefaults.standard.set(useCustomMenuBarSymbol, forKey: Keys.useCustomMenuBarSymbol)
     UserDefaults.standard.set(customMenuBarSymbol, forKey: Keys.customMenuBarSymbol)
+    UserDefaults.standard.set(showNextTimerInMenuBar, forKey: Keys.showNextTimerInMenuBar)
     updateLoginItem()
     saveDragLineColor()
   }
