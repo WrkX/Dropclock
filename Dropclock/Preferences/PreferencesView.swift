@@ -1,5 +1,26 @@
 import EventKit
 import SwiftUI
+import Combine
+
+fileprivate extension View {
+  @ViewBuilder
+  func onChangeCompat<Value: Equatable>(_ value: Value, publisher: Published<Value>.Publisher, perform: @escaping (Value) -> Void) -> some View {
+    if #available(macOS 14, *) {
+      self.onChange(of: value) { newValue in
+        perform(newValue)
+      }
+    } else {
+      self.onReceive(publisher.dropFirst()) { newValue in
+        perform(newValue)
+      }
+    }
+  }
+
+  @ViewBuilder
+  func onChangeCompat<Value>(_ publisher: Published<Value>.Publisher, perform: @escaping (Value) -> Void) -> some View {
+    self.onReceive(publisher.dropFirst(), perform: perform)
+  }
+}
 
 enum PreferenceTab {
   case general
@@ -81,7 +102,7 @@ struct PreferencesView: View {
     .onAppear {
       viewModel.loadPreferences()
     }
-    .onChange(of: viewModel.allowReminders) { _, newValue in
+    .onChangeCompat(viewModel.allowReminders, publisher: viewModel.$allowReminders) { newValue in
       if newValue {
         Task {
           await viewModel.ensureReminderAccess()
@@ -101,7 +122,7 @@ struct PreferencesView: View {
             .toggleStyle(SwitchToggleStyle())
             .labelsHidden()
             .frame(width: 40)
-            .onChange(of: viewModel.startAtLogin) {
+            .onChangeCompat(viewModel.startAtLogin, publisher: viewModel.$startAtLogin) { _ in
               viewModel.savePreferences()
             }
         }
@@ -113,7 +134,7 @@ struct PreferencesView: View {
             .toggleStyle(SwitchToggleStyle())
             .labelsHidden()
             .frame(width: 40)
-            .onChange(of: viewModel.showNextTimerInMenuBar) {
+            .onChangeCompat(viewModel.showNextTimerInMenuBar, publisher: viewModel.$showNextTimerInMenuBar) { _ in
               viewModel.savePreferences()
             }
         }
@@ -125,7 +146,7 @@ struct PreferencesView: View {
             .toggleStyle(SwitchToggleStyle())
             .labelsHidden()
             .frame(width: 40)
-            .onChange(of: viewModel.useAlternativeMenuBarIcon) {
+            .onChangeCompat(viewModel.useAlternativeMenuBarIcon, publisher: viewModel.$useAlternativeMenuBarIcon) { _ in
               viewModel.savePreferences()
             }
         }
@@ -137,7 +158,7 @@ struct PreferencesView: View {
             .toggleStyle(SwitchToggleStyle())
             .labelsHidden()
             .frame(width: 40)
-            .onChange(of: viewModel.useCustomMenuBarIcon) {
+            .onChangeCompat(viewModel.useCustomMenuBarIcon, publisher: viewModel.$useCustomMenuBarIcon) { _ in
               viewModel.savePreferences()
             }
         }
@@ -149,7 +170,7 @@ struct PreferencesView: View {
             TextField("Enter text", text: $viewModel.customMenuBarWord)
               .textFieldStyle(RoundedBorderTextFieldStyle())
               .frame(width: 100)
-              .onChange(of: viewModel.customMenuBarWord) {
+              .onChangeCompat(viewModel.customMenuBarWord, publisher: viewModel.$customMenuBarWord) { _ in
                 viewModel.savePreferences()
               }
           }
@@ -162,7 +183,7 @@ struct PreferencesView: View {
             .toggleStyle(SwitchToggleStyle())
             .labelsHidden()
             .frame(width: 40)
-            .onChange(of: viewModel.useCustomMenuBarSymbol) {
+            .onChangeCompat(viewModel.useCustomMenuBarSymbol, publisher: viewModel.$useCustomMenuBarSymbol) { _ in
               viewModel.savePreferences()
             }
         }
@@ -174,7 +195,7 @@ struct PreferencesView: View {
             TextField("Enter text", text: $viewModel.customMenuBarSymbol)
               .textFieldStyle(RoundedBorderTextFieldStyle())
               .frame(width: 100)
-              .onChange(of: viewModel.customMenuBarSymbol) {
+              .onChangeCompat(viewModel.customMenuBarSymbol, publisher: viewModel.$customMenuBarSymbol) { _ in
                 viewModel.savePreferences()
               }
           }
@@ -192,7 +213,7 @@ struct PreferencesView: View {
             .toggleStyle(SwitchToggleStyle())
             .labelsHidden()
             .frame(width: 40)
-            .onChange(of: viewModel.viewAsMinutes) {
+            .onChangeCompat(viewModel.viewAsMinutes, publisher: viewModel.$viewAsMinutes) { _ in
               viewModel.savePreferences()
             }
         }
@@ -205,7 +226,7 @@ struct PreferencesView: View {
             .toggleStyle(SwitchToggleStyle())
             .labelsHidden()
             .frame(width: 40)
-            .onChange(of: viewModel.showDragIndicator) {
+            .onChangeCompat(viewModel.showDragIndicator, publisher: viewModel.$showDragIndicator) { _ in
               viewModel.savePreferences()
             }
         }
@@ -219,7 +240,7 @@ struct PreferencesView: View {
                 .toggleStyle(SwitchToggleStyle())
                 .labelsHidden()
                 .frame(width: 40)
-                .onChange(of: viewModel.changeRubberbandColor) {
+                .onChangeCompat(viewModel.changeRubberbandColor, publisher: viewModel.$changeRubberbandColor) { _ in
                   viewModel.savePreferences()
                 }
             }
@@ -253,7 +274,7 @@ struct PreferencesView: View {
             .toggleStyle(SwitchToggleStyle())
             .labelsHidden()
             .frame(width: 40)
-            .onChange(of: viewModel.allowReminders) {
+            .onChangeCompat(viewModel.allowReminders, publisher: viewModel.$allowReminders) { _ in
               viewModel.savePreferences()
             }
         }
@@ -272,7 +293,7 @@ struct PreferencesView: View {
           .pickerStyle(MenuPickerStyle())
           .frame(width: 140, alignment: .trailing)
           .disabled(!viewModel.allowReminders)
-          .onChange(of: viewModel.selectedList) {
+          .onChangeCompat(viewModel.$selectedList) { _ in
             viewModel.savePreferences()
           }
         }
@@ -289,7 +310,7 @@ struct PreferencesView: View {
             .labelsHidden()
             .frame(width: 40)
             .disabled(!viewModel.allowReminders)
-            .onChange(of: viewModel.deleteReminders) {
+            .onChangeCompat(viewModel.deleteReminders, publisher: viewModel.$deleteReminders) { _ in
               viewModel.savePreferences()
             }
         }
@@ -305,7 +326,7 @@ struct PreferencesView: View {
             .labelsHidden()
             .frame(width: 40)
             .disabled(!viewModel.allowReminders)
-            .onChange(of: viewModel.ignoreShortTimers) {
+            .onChangeCompat(viewModel.ignoreShortTimers, publisher: viewModel.$ignoreShortTimers) { _ in
               viewModel.savePreferences()
             }
         }
@@ -319,7 +340,7 @@ struct PreferencesView: View {
             )
             .frame(width: 250, alignment: .leading)
             .padding(.bottom, 15)
-            .onChange(of: viewModel.shortTimerThresholdMinutes) {
+            .onChangeCompat(viewModel.shortTimerThresholdMinutes, publisher: viewModel.$shortTimerThresholdMinutes) { _ in
               viewModel.savePreferences()
             }
             Text("\(Int(viewModel.shortTimerThresholdMinutes)) min")
@@ -342,7 +363,7 @@ struct PreferencesView: View {
             .toggleStyle(SwitchToggleStyle())
             .labelsHidden()
             .frame(width: 40)
-            .onChange(of: viewModel.allowCustomNames) {
+            .onChangeCompat(viewModel.allowCustomNames, publisher: viewModel.$allowCustomNames) { _ in
               viewModel.savePreferences()
             }
         }
@@ -358,7 +379,7 @@ struct PreferencesView: View {
             .toggleStyle(SwitchToggleStyle())
             .labelsHidden()
             .frame(width: 40)
-            .onChange(of: viewModel.allowFiveMinuteMode) {
+            .onChangeCompat(viewModel.allowFiveMinuteMode, publisher: viewModel.$allowFiveMinuteMode) { _ in
               viewModel.savePreferences()
             }
         }
@@ -374,7 +395,7 @@ struct PreferencesView: View {
             .toggleStyle(SwitchToggleStyle())
             .labelsHidden()
             .frame(width: 40)
-            .onChange(of: viewModel.allowSecondsMode) {
+            .onChangeCompat(viewModel.allowSecondsMode, publisher: viewModel.$allowSecondsMode) { _ in
               viewModel.savePreferences()
             }
         }
