@@ -12,7 +12,7 @@
 
 ## Key Features
 
-*   **Drag & Drop Timer Creation:** The most natural way to set timers. Simply click and drag the menu bar icon to your desired timer duration – release to start. It's that simple and intuitive.
+*   **Drag & Drop Timer Creation:** The most natural way to set timers. Simply click and drag the menu bar icon to your desired timer duration -> release to start. It's that simple and intuitive.
 *   **Menu Bar Accessibility:** Always available in your menu bar, Dropclock is just a click and drag away whenever you need a timer.
 *   **Optional Reminders Sync:** Keep your timers top of mind\! Dropclock can optionally sync your timers with macOS Reminders, ensuring you receive notifications even outside the app. Never miss an important deadline or cooking time again.
 *   **Free and Open Source:** Dropclock is completely free to use and open source, developed with the community in mind. Feel free to contribute and help make it even better\!
@@ -42,7 +42,7 @@ I appreciate your contributions to make Dropclock a better tool for everyone.
 
 ## License
 
-Dropclock is released under the [MIT License](LICENSE). See the `LICENSE` file for more details.
+Dropclock is released under the [GPL3 License](LICENSE). See the `LICENSE` file for more details.
 
 ## Download
 

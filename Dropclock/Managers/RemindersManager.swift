@@ -25,11 +25,22 @@ class RemindersManager {
     case .fullAccess:
       return true
     case .notDetermined:
-      do {
-        return try await eventStore.requestFullAccessToReminders()
-      } catch {
-        print("Error requesting access: \(error.localizedDescription)")
-        return false
+      if #available(macOS 14, *) {
+        do {
+          return try await eventStore.requestFullAccessToReminders()
+        } catch {
+          print("Error requesting access: \(error.localizedDescription)")
+          return false
+        }
+      } else {
+        return await withCheckedContinuation { cont in
+          eventStore.requestAccess(to: .reminder) { granted, error in
+            if let error = error {
+              print("Error requesting access (fallback): \(error.localizedDescription)")
+            }
+            cont.resume(returning: granted)
+          }
+        }
       }
     case .denied, .restricted:
       print("Reminders access denied. Please enable it in System Settings.")
@@ -51,11 +62,15 @@ class RemindersManager {
   func createReminder(title: String, notes: String?, dueDate: Date) throws
     -> String
   {
-    guard
-      checkAuthorizationStatus() == .fullAccess
-        || checkAuthorizationStatus() == .writeOnly
-    else {
-      throw RemindersError.accessDenied
+    let status = checkAuthorizationStatus()
+    if #available(macOS 14, *) {
+      guard status == .fullAccess || status == .writeOnly else {
+        throw RemindersError.accessDenied
+      }
+    } else {
+      guard status == .authorized else {
+        throw RemindersError.accessDenied
+      }
     }
 
     guard
@@ -67,21 +82,21 @@ class RemindersManager {
       throw RemindersError.noReminderListSelected
     }
 
-    let roundedDueDate = Calendar.current.date(
+    guard let roundedDueDate = Calendar.current.date(
       bySetting: .second, value: 0,
-      of: dueDate.addingTimeInterval(
-        59
-          - (dueDate.timeIntervalSinceReferenceDate.truncatingRemainder(
-            dividingBy: 60))))
+      of: dueDate.addingTimeInterval(59 - (dueDate.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 60))))
+    else {
+      throw RemindersError.reminderCreationFailed(NSError(domain: "RemindersManager", code: 0, userInfo: [NSLocalizedDescriptionKey: "Failed to compute rounded due date"]))
+    }
 
     let reminder = EKReminder(eventStore: eventStore)
     reminder.title = title
     reminder.notes = notes
     reminder.calendar = calendar
     reminder.dueDateComponents = Calendar.current.dateComponents(
-      [.year, .month, .day, .hour, .minute], from: roundedDueDate!)
+      [.year, .month, .day, .hour, .minute], from: roundedDueDate)
 
-    let alarm = EKAlarm(absoluteDate: roundedDueDate!)
+    let alarm = EKAlarm(absoluteDate: roundedDueDate)
     alarm.relativeOffset = 0
     reminder.addAlarm(alarm)
 
@@ -97,11 +112,15 @@ class RemindersManager {
   }
 
   func deleteReminder(withIdentifier identifier: String) async throws {
-    guard
-      checkAuthorizationStatus() == .fullAccess
-        || checkAuthorizationStatus() == .writeOnly
-    else {
-      throw RemindersError.accessDenied
+    let status = checkAuthorizationStatus()
+    if #available(macOS 14, *) {
+      guard status == .fullAccess || status == .writeOnly else {
+        throw RemindersError.accessDenied
+      }
+    } else {
+      guard status == .authorized else {
+        throw RemindersError.accessDenied
+      }
     }
 
     let predicate = eventStore.predicateForReminders(in: nil)
