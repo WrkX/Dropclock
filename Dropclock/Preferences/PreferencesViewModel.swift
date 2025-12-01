@@ -60,6 +60,12 @@ class PreferencesViewModel: ObservableObject {
     }
   }
   @Published var showNextTimerInMenuBar: Bool = false
+  @Published var playAlarmSound: Bool = false
+  @Published var selectedAlarmSound: String = ""
+  @Published var availableAlarmSounds: [String] = []
+  @Published var loopAlarmUntilStopped: Bool = false
+  @Published var useCustomAlarmSound: Bool = false
+  @Published var customAlarmSoundName: String = ""
 
   @AppStorage("selectedReminderListID") private var selectedReminderListID:
     String = ""
@@ -83,6 +89,12 @@ class PreferencesViewModel: ObservableObject {
     static let customMenuBarWord = "customMenuBarWord"
     static let useAlternativeMenuBarIcon = "useAlternativeMenuBarIcon"
     static let showNextTimerInMenuBar = "showNextTimerInMenuBar"
+    static let playAlarmSound = "playAlarmSound"
+    static let selectedAlarmSound = "selectedAlarmSound"
+    static let loopAlarmUntilStopped = "loopAlarmUntilStopped"
+    static let useCustomAlarmSound = "useCustomAlarmSound"
+    static let customAlarmSoundBookmark = "customAlarmSoundBookmark"
+    static let customAlarmSoundName = "customAlarmSoundName"
   }
 
   init() {
@@ -136,6 +148,16 @@ class PreferencesViewModel: ObservableObject {
     customMenuBarSymbol = UserDefaults.standard.string(forKey: Keys.customMenuBarSymbol) ?? ""
     useCustomMenuBarSymbol = UserDefaults.standard.bool(forKey: Keys.useCustomMenuBarSymbol)
     showNextTimerInMenuBar = UserDefaults.standard.bool(forKey: Keys.showNextTimerInMenuBar)
+    playAlarmSound = UserDefaults.standard.bool(forKey: Keys.playAlarmSound)
+    selectedAlarmSound =
+    UserDefaults.standard.string(forKey: Keys.selectedAlarmSound) ?? ""
+    loopAlarmUntilStopped = UserDefaults.standard.bool(
+      forKey: Keys.loopAlarmUntilStopped)
+    useCustomAlarmSound = UserDefaults.standard.bool(
+      forKey: Keys.useCustomAlarmSound)
+    customAlarmSoundName = UserDefaults.standard.string(
+      forKey: Keys.customAlarmSoundName) ?? ""
+    refreshAvailableAlarmSounds()
   }
 
   private func loadSelectedList() {
@@ -178,6 +200,14 @@ class PreferencesViewModel: ObservableObject {
     UserDefaults.standard.set(useCustomMenuBarSymbol, forKey: Keys.useCustomMenuBarSymbol)
     UserDefaults.standard.set(customMenuBarSymbol, forKey: Keys.customMenuBarSymbol)
     UserDefaults.standard.set(showNextTimerInMenuBar, forKey: Keys.showNextTimerInMenuBar)
+    UserDefaults.standard.set(playAlarmSound, forKey: Keys.playAlarmSound)
+    UserDefaults.standard.set(selectedAlarmSound, forKey: Keys.selectedAlarmSound)
+    UserDefaults.standard.set(
+      loopAlarmUntilStopped, forKey: Keys.loopAlarmUntilStopped)
+    UserDefaults.standard.set(
+      useCustomAlarmSound, forKey: Keys.useCustomAlarmSound)
+    UserDefaults.standard.set(
+      customAlarmSoundName, forKey: Keys.customAlarmSoundName)
     updateLoginItem()
     saveDragLineColor()
   }
@@ -217,6 +247,44 @@ class PreferencesViewModel: ObservableObject {
     await MainActor.run { [weak self] in
       guard let self = self else { return }
       self.reminderLists = RemindersManager.shared.fetchReminderLists()
+    }
+  }
+
+  func refreshAvailableAlarmSounds() {
+    availableAlarmSounds = SoundManager.shared.availableAlarmSounds()
+    if !selectedAlarmSound.isEmpty
+        && !availableAlarmSounds.contains(selectedAlarmSound)
+    {
+      selectedAlarmSound = availableAlarmSounds.first ?? ""
+      savePreferences()
+    } else if selectedAlarmSound.isEmpty {
+      selectedAlarmSound = availableAlarmSounds.first ?? ""
+    }
+  }
+
+  func displayName(for sound: String) -> String {
+    URL(fileURLWithPath: sound).deletingPathExtension().lastPathComponent
+  }
+
+  func storeCustomAlarmSound(url: URL) {
+    let startedAccess = url.startAccessingSecurityScopedResource()
+    do {
+      let bookmark = try url.bookmarkData(
+        options: [.withSecurityScope],
+        includingResourceValuesForKeys: nil,
+        relativeTo: nil)
+      DispatchQueue.main.async { [weak self] in
+        UserDefaults.standard.set(
+          bookmark, forKey: Keys.customAlarmSoundBookmark)
+        self?.customAlarmSoundName = url.lastPathComponent
+        self?.useCustomAlarmSound = true
+        self?.savePreferences()
+      }
+    } catch {
+      print("Failed to store custom alarm sound: \(error)")
+    }
+    if startedAccess {
+      url.stopAccessingSecurityScopedResource()
     }
   }
 

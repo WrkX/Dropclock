@@ -1,6 +1,7 @@
 import EventKit
 import SwiftUI
 import Combine
+import UniformTypeIdentifiers
 
 fileprivate extension View {
   @ViewBuilder
@@ -32,6 +33,7 @@ struct PreferencesView: View {
   @StateObject private var viewModel = PreferencesViewModel()
   @State private var selectedTab: PreferenceTab = .general
   @State private var hoverStates: [PreferenceTab: Bool] = [:]
+  @State private var isShowingSoundImporter: Bool = false
 
   var body: some View {
     VStack(spacing: 0) {
@@ -101,6 +103,19 @@ struct PreferencesView: View {
     }
     .onAppear {
       viewModel.loadPreferences()
+    }
+    .fileImporter(
+      isPresented: $isShowingSoundImporter,
+      allowedContentTypes: SoundManager.shared.allowedExtensions.compactMap {
+        UTType(filenameExtension: $0)
+      }
+    ) { result in
+      switch result {
+      case .success(let url):
+        viewModel.storeCustomAlarmSound(url: url)
+      case .failure(let error):
+        print("File import failed: \(error)")
+      }
     }
     .onChangeCompat(viewModel.allowReminders, publisher: viewModel.$allowReminders) { newValue in
       if newValue {
@@ -369,6 +384,85 @@ struct PreferencesView: View {
         }
 
         Divider()
+
+        SettingsRow(
+            title: "Play Alarm Sound",
+            helpText:
+              "When enabled, Dropclock plays an alarm sound as soon as a timer finishes."
+          ) {
+            Toggle("", isOn: $viewModel.playAlarmSound)
+            .toggleStyle(SwitchToggleStyle())
+            .labelsHidden()
+            .frame(width: 40)
+            .onChangeCompat(viewModel.playAlarmSound, publisher: viewModel.$playAlarmSound) { _ in
+              viewModel.savePreferences()
+            }
+        }
+
+        if viewModel.playAlarmSound {
+          SettingsRow(
+            title: "Keep playing until manually stopped",
+            helpText:
+              "Loops the alarm and keeps the finished timer in the list until you remove it."
+          ) {
+            Toggle("", isOn: $viewModel.loopAlarmUntilStopped)
+              .toggleStyle(SwitchToggleStyle())
+              .labelsHidden()
+              .frame(width: 40)
+              .onChangeCompat(viewModel.loopAlarmUntilStopped, publisher: viewModel.$loopAlarmUntilStopped) { _ in
+                viewModel.savePreferences()
+              }
+          }
+
+          SettingsRow(
+            title: "Alarm Sound File",
+            helpText:
+              "Select one of the .mp3/.wav files that are part of the app."
+          ) {
+            VStack(alignment: .trailing, spacing: 6) {
+              Toggle("Use custom sound file", isOn: $viewModel.useCustomAlarmSound)
+                .toggleStyle(SwitchToggleStyle())
+                .frame(width: 220, alignment: .trailing)
+                .onChangeCompat(viewModel.useCustomAlarmSound, publisher: viewModel.$useCustomAlarmSound) { _ in
+                  viewModel.savePreferences()
+                }
+
+              if viewModel.useCustomAlarmSound {
+                HStack {
+                  Text(
+                    viewModel.customAlarmSoundName.isEmpty
+                      ? "No file selected"
+                      : viewModel.customAlarmSoundName
+                  )
+                  .foregroundColor(.secondary)
+                  .lineLimit(1)
+                  Button("Choose File…") {
+                    isShowingSoundImporter = true
+                  }
+                }
+              } else {
+                if viewModel.availableAlarmSounds.isEmpty {
+                  Text("No sound files found")
+                    .foregroundColor(.secondary)
+                    .frame(width: 180, alignment: .trailing)
+                } else {
+                  Picker("", selection: $viewModel.selectedAlarmSound) {
+                    ForEach(viewModel.availableAlarmSounds, id: \.self) { sound in
+                      Text(viewModel.displayName(for: sound)).tag(sound)
+                    }
+                  }
+                  .pickerStyle(MenuPickerStyle())
+                  .frame(width: 180, alignment: .trailing)
+                  .onChangeCompat(viewModel.selectedAlarmSound, publisher: viewModel.$selectedAlarmSound) { _ in
+                    viewModel.savePreferences()
+                  }
+                }
+              }
+            }
+          }
+
+          Divider()
+        }
 
         SettingsRow(
           title: "Enable 5 Minute Mode",

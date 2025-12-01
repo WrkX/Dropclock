@@ -425,9 +425,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
       let timer = activeTimers[index]
       let timerName = timer.name
       NotificationManager.shared.dispatchNotification(timerName: timerName)
-      activeTimers.remove(at: index)
+      let defaults = UserDefaults.standard
+      let shouldLoopAlarm = defaults.bool(forKey: "playAlarmSound")
+        && defaults.bool(forKey: "loopAlarmUntilStopped")
+      SoundManager.shared.playSelectedAlarmIfEnabled(loop: shouldLoopAlarm)
+
+      if shouldLoopAlarm {
+        // Keep the finished timer in the list so the user can stop the alarm by deleting it. 
+        // Dunno how I would do it otherwise. TODO: Improve!
+      } else {
+        activeTimers.remove(at: index)
+      }
     }
-    
+
     updateStatusIcon()
     updateMenu()
     saveTimers()
@@ -457,6 +467,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     timerToRemove.timer.invalidate()
     activeTimers.remove(at: timerIndex)
+    SoundManager.shared.stopActiveSound()
     saveTimers()
     updateStatusIcon()
     
