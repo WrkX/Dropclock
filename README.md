@@ -1,6 +1,6 @@
 # Dropclock - Effortless Timers from Your Menu Bar
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![GitHub Releases](https://img.shields.io/github/v/release/wrkx/Dropclock)](https://github.com/wrkx/Dropclock/releases/latest)
+[![License: GPL3](https://img.shields.io/badge/license-%20%20GNU%20GPLv3%20-green?style=plastic)](https://opensource.org/license/gpl-3-0) [![GitHub Releases](https://img.shields.io/github/v/release/wrkx/Dropclock)](https://github.com/wrkx/Dropclock/releases/latest)
 
 **Dropclock** is a lightweight and intuitive macOS application designed to make creating timers as quick and seamless as possible. Forget cumbersome interfaces – simply drag and drop from your menu bar icon to set timers exactly when you need them. Free, open-source and as minimalistic as possible!
 
