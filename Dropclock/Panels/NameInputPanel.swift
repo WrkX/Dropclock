@@ -12,7 +12,7 @@ class NameInputPanel: NSObject {
 
   func show(at point: NSPoint) {
     let panel = NSPanel(
-      contentRect: NSRect(x: 0, y: 0, width: 160, height: 105),
+      contentRect: NSRect(x: 0, y: 0, width: 160, height: 110),
       styleMask: [.titled, .fullSizeContentView],
       backing: .buffered,
       defer: false
@@ -43,7 +43,7 @@ class NameInputPanel: NSObject {
     label.drawsBackground = false
 
     let textField = NSTextField(
-      frame: NSRect(x: 0, y: 0, width: 50, height: 22))
+      frame: NSRect(x: 0, y: 0, width: 240, height: 26))
     textField.placeholderString =
       "Timer \(UserDefaults.standard.integer(forKey: "timerCount") + 1)"
     textField.isEditable = true
@@ -110,7 +110,19 @@ class NameInputPanel: NSObject {
       textField.trailingAnchor.constraint(equalTo: stackView.trailingAnchor),
     ])
 
-    let panelOrigin = NSPoint(x: point.x - 125, y: point.y - 75)
+    let desiredOrigin = NSPoint(
+      x: point.x - panel.frame.width / 2,
+      y: point.y - 75)
+    let screen = NSScreen.screens.first { $0.frame.contains(point) }
+      ?? NSScreen.main
+    let visibleFrame = screen?.visibleFrame ?? panel.frame
+    let panelOrigin = NSPoint(
+      x: min(
+        max(desiredOrigin.x, visibleFrame.minX),
+        visibleFrame.maxX - panel.frame.width),
+      y: min(
+        max(desiredOrigin.y, visibleFrame.minY),
+        visibleFrame.maxY - panel.frame.height))
     panel.setFrameOrigin(panelOrigin)
 
     panel.orderFront(nil)

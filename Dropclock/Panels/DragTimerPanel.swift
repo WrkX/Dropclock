@@ -33,6 +33,7 @@ class DragTimerPanel {
     panel.isOpaque = false
     panel.backgroundColor = .clear
     panel.hasShadow = true
+    panel.ignoresMouseEvents = true
 
     let blurView = NSVisualEffectView(frame: panel.contentView!.bounds)
     blurView.material = .hudWindow

@@ -27,6 +27,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   internal var dragStartLocation: CGPoint?
   internal var dragLineView: DragLineView?
   internal var dragLineWindow: NSWindow?
+  internal var statusMenu: NSMenu?
+  internal var isMenuPresentationPending = false
+  internal var isTrackingStatusItem = false
+  internal var statusItemLocalMonitor: Any?
+  internal var statusItemGlobalMonitor: Any?
+  internal var statusItemTrackingTimer: Timer?
+  internal var trackingSawMouseDown = false
+  internal var statusItemAnchorPoint: CGPoint = .zero
   internal let MinuteThreshold: CGFloat = 130
   internal let ThirtySecondThreshold: CGFloat = 80
   internal let SecondThreshold: CGFloat = 50
@@ -45,7 +53,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   
   internal var endTime: Date?
   private var menuUpdateTimer: Timer?
-  private var isMenuOpen = false
+  internal var isMenuOpen = false
   
   func applicationDidFinishLaunching(_ notification: Notification) {
     statusItem = NSStatusBar.system.statusItem(
@@ -58,6 +66,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     loadSavedTimers()
     
     updateMenu()
+    setupKeyEquivalents()
     
     startStatusIconUpdateTimer()
     
@@ -79,6 +88,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   }
   
   func applicationWillTerminate(_ notification: Notification) {
+    removeStatusItemMouseMonitors()
     dragTimerPanel?.cleanup()
     nameInputPanel?.cleanup()
   }
@@ -164,17 +174,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   }
   
   @objc private func menuWillOpen(_ notification: Notification) {
-    guard let menu = notification.object as? NSMenu, menu == statusItem?.menu
+    guard let menu = notification.object as? NSMenu,
+      menu == statusItem?.menu || menu == statusMenu
     else { return }
     isMenuOpen = true
     startMenuRefreshTimer()
   }
   
   @objc private func menuWillClose(_ notification: Notification) {
-    guard let menu = notification.object as? NSMenu, menu == statusItem?.menu
+    guard let menu = notification.object as? NSMenu,
+      menu == statusItem?.menu || menu == statusMenu
     else { return }
     isMenuOpen = false
     stopMenuRefreshTimer()
+    updateMenu()
   }
   
   private var menuRefreshTimer: Timer?
@@ -487,6 +500,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   }
   
   private func updateMenu() {
+    if isMenuOpen, let menu = statusMenu {
+      for (index, timerInfo) in activeTimers.enumerated() {
+        guard index + 1 < menu.numberOfItems,
+          let view = menu.item(at: index + 1)?.view as? HoverView
+        else { break }
+        let remainingTime = timerInfo.startTime.addingTimeInterval(
+          timerInfo.duration
+        ).timeIntervalSince(Date())
+        let displayName = timerInfo.name ?? "Timer \(index + 1)"
+        view.updateNormalText(
+          "\(displayName): \(formatTimeInterval(remainingTime))")
+      }
+      return
+    }
+
     let menu = NSMenu()
     
     if activeTimers.count > 0 {
@@ -519,15 +547,38 @@ class AppDelegate: NSObject, NSApplicationDelegate {
       menu.addItem(NSMenuItem.separator())
     }
     
-    menu.addItem(
-      NSMenuItem(
-        title: "Preferences", action: #selector(preferences), keyEquivalent: ","
-      ))
-    menu.addItem(
-      NSMenuItem(
-        title: "Quit Dropclock", action: #selector(quit), keyEquivalent: "q"))
+    let preferencesItem = NSMenuItem(
+      title: "Preferences", action: #selector(preferences), keyEquivalent: ",")
+    preferencesItem.target = self
+    menu.addItem(preferencesItem)
+
+    let quitItem = NSMenuItem(
+      title: "Quit Dropclock", action: #selector(quit), keyEquivalent: "q")
+    quitItem.target = self
+    menu.addItem(quitItem)
     
-    statusItem?.menu = menu
+    statusMenu = menu
+  }
+
+  private func setupKeyEquivalents() {
+    guard NSApp.mainMenu == nil else { return }
+    let mainMenu = NSMenu()
+    let appItem = NSMenuItem()
+    let appMenu = NSMenu()
+    appItem.submenu = appMenu
+    mainMenu.addItem(appItem)
+
+    let preferencesItem = NSMenuItem(
+      title: "Preferences", action: #selector(preferences), keyEquivalent: ",")
+    preferencesItem.target = self
+    appMenu.addItem(preferencesItem)
+
+    let quitItem = NSMenuItem(
+      title: "Quit Dropclock", action: #selector(quit), keyEquivalent: "q")
+    quitItem.target = self
+    appMenu.addItem(quitItem)
+
+    NSApp.mainMenu = mainMenu
   }
   
   private func formatTimeInterval(_ timeInterval: TimeInterval) -> String {

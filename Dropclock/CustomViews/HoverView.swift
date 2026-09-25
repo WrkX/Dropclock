@@ -2,7 +2,7 @@ import AppKit
 
 class HoverView: NSView {
   private let textField = NSTextField()
-  private let normalText: String
+  private var normalText: String
   private let hoverText: String
   private weak var target: AnyObject?
   private let action: Selector
@@ -25,6 +25,14 @@ class HoverView: NSView {
 
   required init?(coder: NSCoder) {
     fatalError("init(coder:) has not been implemented")
+  }
+
+  func updateNormalText(_ text: String) {
+    let wasShowingNormalText = textField.stringValue == normalText
+    normalText = text
+    if wasShowingNormalText {
+      textField.stringValue = text
+    }
   }
 
   private func setupView() {
