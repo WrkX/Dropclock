@@ -153,6 +153,20 @@ struct PreferencesView: View {
               viewModel.savePreferences()
             }
         }
+        if viewModel.showNextTimerInMenuBar {
+          SettingsRow(
+            title: "Hide timer names",
+            helpText: "Shows only the next timer's remaining time in the menu bar."
+          ) {
+            Toggle("", isOn: $viewModel.hideTimerNamesInMenuBar)
+              .toggleStyle(SwitchToggleStyle())
+              .labelsHidden()
+              .frame(width: 40)
+              .onChangeCompat(viewModel.hideTimerNamesInMenuBar, publisher: viewModel.$hideTimerNamesInMenuBar) { _ in
+                viewModel.savePreferences()
+              }
+          }
+        }
         SettingsRow(
           title: "Alternative Menu Bar Icon",
           helpText: "Changes the menu bar icon to a different style."

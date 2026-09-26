@@ -2,6 +2,10 @@ import EventKit
 import ServiceManagement
 import SwiftUI
 
+extension Notification.Name {
+  static let menuBarDisplayPreferencesDidChange = Notification.Name("menuBarDisplayPreferencesDidChange")
+}
+
 class PreferencesViewModel: ObservableObject {
   @Published var reminderLists: [EKCalendar] = []
   @Published var selectedList: EKCalendar?
@@ -60,6 +64,7 @@ class PreferencesViewModel: ObservableObject {
     }
   }
   @Published var showNextTimerInMenuBar: Bool = false
+  @Published var hideTimerNamesInMenuBar: Bool = false
   @Published var playAlarmSound: Bool = false
   @Published var selectedAlarmSound: String = ""
   @Published var availableAlarmSounds: [String] = []
@@ -89,6 +94,7 @@ class PreferencesViewModel: ObservableObject {
     static let customMenuBarWord = "customMenuBarWord"
     static let useAlternativeMenuBarIcon = "useAlternativeMenuBarIcon"
     static let showNextTimerInMenuBar = "showNextTimerInMenuBar"
+    static let hideTimerNamesInMenuBar = "hideTimerNamesInMenuBar"
     static let playAlarmSound = "playAlarmSound"
     static let selectedAlarmSound = "selectedAlarmSound"
     static let loopAlarmUntilStopped = "loopAlarmUntilStopped"
@@ -148,6 +154,7 @@ class PreferencesViewModel: ObservableObject {
     customMenuBarSymbol = UserDefaults.standard.string(forKey: Keys.customMenuBarSymbol) ?? ""
     useCustomMenuBarSymbol = UserDefaults.standard.bool(forKey: Keys.useCustomMenuBarSymbol)
     showNextTimerInMenuBar = UserDefaults.standard.bool(forKey: Keys.showNextTimerInMenuBar)
+    hideTimerNamesInMenuBar = UserDefaults.standard.bool(forKey: Keys.hideTimerNamesInMenuBar)
     playAlarmSound = UserDefaults.standard.bool(forKey: Keys.playAlarmSound)
     selectedAlarmSound =
     UserDefaults.standard.string(forKey: Keys.selectedAlarmSound) ?? ""
@@ -171,6 +178,10 @@ class PreferencesViewModel: ObservableObject {
   }
 
   func savePreferences() {
+    let menuBarDisplayChanged =
+      UserDefaults.standard.bool(forKey: Keys.showNextTimerInMenuBar) != showNextTimerInMenuBar
+      || UserDefaults.standard.bool(forKey: Keys.hideTimerNamesInMenuBar) != hideTimerNamesInMenuBar
+
     if allowReminders {
       Task {
         await ensureReminderAccess()
@@ -200,6 +211,7 @@ class PreferencesViewModel: ObservableObject {
     UserDefaults.standard.set(useCustomMenuBarSymbol, forKey: Keys.useCustomMenuBarSymbol)
     UserDefaults.standard.set(customMenuBarSymbol, forKey: Keys.customMenuBarSymbol)
     UserDefaults.standard.set(showNextTimerInMenuBar, forKey: Keys.showNextTimerInMenuBar)
+    UserDefaults.standard.set(hideTimerNamesInMenuBar, forKey: Keys.hideTimerNamesInMenuBar)
     UserDefaults.standard.set(playAlarmSound, forKey: Keys.playAlarmSound)
     UserDefaults.standard.set(selectedAlarmSound, forKey: Keys.selectedAlarmSound)
     UserDefaults.standard.set(
@@ -210,6 +222,9 @@ class PreferencesViewModel: ObservableObject {
       customAlarmSoundName, forKey: Keys.customAlarmSoundName)
     updateLoginItem()
     saveDragLineColor()
+    if menuBarDisplayChanged {
+      NotificationCenter.default.post(name: .menuBarDisplayPreferencesDidChange, object: nil)
+    }
   }
 
   func ensureReminderAccess() async {

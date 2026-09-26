@@ -85,6 +85,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
       name: NSMenu.didEndTrackingNotification,
       object: nil
     )
+
+    NotificationCenter.default.addObserver(
+      self,
+      selector: #selector(menuBarDisplayPreferencesDidChange(_:)),
+      name: .menuBarDisplayPreferencesDidChange,
+      object: nil
+    )
   }
   
   func applicationWillTerminate(_ notification: Notification) {
@@ -206,6 +213,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     menuRefreshTimer?.invalidate()
     menuRefreshTimer = nil
   }
+
+  @objc private func menuBarDisplayPreferencesDidChange(_ notification: Notification) {
+    startStatusIconUpdateTimer()
+    updateStatusIcon()
+  }
   
   private func startMenuUpdateTimer() {
     menuUpdateTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) {
@@ -236,11 +248,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         if remainingTime > 0 {
           let formattedTime = formatTimeInterval(remainingTime)
-          let displayName = timer.name ?? "Timer"
-          let truncatedName = displayName.count > 15
-          ? String(displayName.prefix(12)) + "…"
-          : displayName
-          let displayText = "\(truncatedName): \(formattedTime)"
+          let displayText: String
+          if UserDefaults.standard.bool(forKey: "hideTimerNamesInMenuBar") {
+            displayText = formattedTime
+          } else {
+            let displayName = timer.name ?? "Timer"
+            let truncatedName = displayName.count > 15
+            ? String(displayName.prefix(12)) + "…"
+            : displayName
+            displayText = "\(truncatedName): \(formattedTime)"
+          }
           
           statusItem?.button?.image = nil
           statusItem?.button?.title = displayText
