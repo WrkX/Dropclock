@@ -263,7 +263,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
           statusItem?.button?.title = displayText
           
           if let button = statusItem?.button {
-            button.font = NSFont.systemFont(ofSize: 13, weight: .medium)
+            button.font = NSFont.monospacedDigitSystemFont(ofSize: 13, weight: .medium)
           }
           
           return
