@@ -9,7 +9,45 @@ extension AppDelegate {
     button.sendAction(on: [
       .leftMouseDown, .leftMouseDragged, .leftMouseUp, .rightMouseUp,
     ])
+    installMouseDownMonitors()
     attachExpandedInterfaceDelegateIfAvailable()
+  }
+
+  private func installMouseDownMonitors() {
+    mouseDownLocalMonitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) {
+      [weak self] event in
+      self?.lastLeftMouseDownLocation = NSEvent.mouseLocation
+      return event
+    }
+    mouseDownGlobalMonitor = NSEvent.addGlobalMonitorForEvents(matching: .leftMouseDown) {
+      [weak self] _ in
+      self?.lastLeftMouseDownLocation = NSEvent.mouseLocation
+    }
+  }
+
+  internal func removeMouseDownMonitors() {
+    if let monitor = mouseDownLocalMonitor {
+      NSEvent.removeMonitor(monitor)
+      mouseDownLocalMonitor = nil
+    }
+    if let monitor = mouseDownGlobalMonitor {
+      NSEvent.removeMonitor(monitor)
+      mouseDownGlobalMonitor = nil
+    }
+  }
+
+  private func mouseDownStartedOnStatusItem() -> Bool {
+    guard let button = statusItem?.button, let window = button.window else {
+      return false
+    }
+    if let event = NSApp.currentEvent, event.type == .leftMouseDown,
+      event.window === window
+    {
+      return true
+    }
+    guard let location = lastLeftMouseDownLocation else { return false }
+    let frame = window.convertToScreen(button.convert(button.bounds, to: nil))
+    return frame.insetBy(dx: -2, dy: -2).contains(location)
   }
 
   @objc internal func handleStatusButtonAction(_ sender: NSStatusBarButton) {
@@ -70,6 +108,10 @@ extension AppDelegate {
       cancelExpandedInterfaceSession()
       return
     }
+    guard mouseDownStartedOnStatusItem() else {
+      cancelExpandedInterfaceSession()
+      return
+    }
     beginStatusItemTracking()
   }
 
@@ -83,7 +125,7 @@ extension AppDelegate {
   }
 
   internal func beginStatusItemTracking() {
-    guard !isTrackingStatusItem else { return }
+    guard !isTrackingStatusItem, mouseDownStartedOnStatusItem() else { return }
     isTrackingStatusItem = true
     baseTime = Date()
     dragTimeInterval = 0

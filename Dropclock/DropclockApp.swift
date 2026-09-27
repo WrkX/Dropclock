@@ -33,6 +33,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   internal var statusItemLocalMonitor: Any?
   internal var statusItemGlobalMonitor: Any?
   internal var statusItemTrackingTimer: Timer?
+  internal var mouseDownLocalMonitor: Any?
+  internal var mouseDownGlobalMonitor: Any?
+  internal var lastLeftMouseDownLocation: CGPoint?
   internal var trackingSawMouseDown = false
   internal var statusItemAnchorPoint: CGPoint = .zero
   internal let MinuteThreshold: CGFloat = 130
@@ -96,6 +99,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   
   func applicationWillTerminate(_ notification: Notification) {
     removeStatusItemMouseMonitors()
+    removeMouseDownMonitors()
     dragTimerPanel?.cleanup()
     nameInputPanel?.cleanup()
   }
