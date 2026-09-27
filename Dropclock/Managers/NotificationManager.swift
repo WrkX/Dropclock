@@ -1,10 +1,21 @@
 import Foundation
 import UserNotifications
 
-class NotificationManager {
+class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
   static let shared = NotificationManager()
 
-  private init() {}
+  private override init() {
+    super.init()
+    UNUserNotificationCenter.current().delegate = self
+  }
+
+  func userNotificationCenter(
+    _ center: UNUserNotificationCenter,
+    willPresent notification: UNNotification,
+    withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+  ) {
+    completionHandler([.banner, .list, .sound])
+  }
 
   func checkForPermission(completion: @escaping () -> Void = {}) {
     let notificationCenter = UNUserNotificationCenter.current()
@@ -43,12 +54,9 @@ class NotificationManager {
     content.title = title
     content.body = body
     content.sound = UNNotificationSound.default
-    let trigger = UNTimeIntervalNotificationTrigger(
-      timeInterval: 0.1, repeats: false)
     let request = UNNotificationRequest(
-      identifier: idenfier, content: content, trigger: trigger)
+      identifier: idenfier, content: content, trigger: nil)
 
-    notificationCenter.removeDeliveredNotifications(withIdentifiers: [idenfier])
     notificationCenter.add(request)
   }
 
