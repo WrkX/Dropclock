@@ -37,6 +37,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   internal var mouseDownGlobalMonitor: Any?
   internal var lastLeftMouseDownLocation: CGPoint?
   internal var trackingSawMouseDown = false
+  internal var trackingStartedAt: Date?
   internal var statusItemAnchorPoint: CGPoint = .zero
   internal let MinuteThreshold: CGFloat = 130
   internal let ThirtySecondThreshold: CGFloat = 80

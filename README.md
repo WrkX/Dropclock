@@ -28,7 +28,7 @@
 
 1.  **Find the Dropclock icon in your menu bar.**
 2.  **Drag 'n' Drop (the) Clock.** As you drag, a visual indicator will appear, showing the timer duration increasing.
-3.  **Release the mouse button when you reach your desired timer duration.** The timer will start automatically.
+3.  **Release the mouse button when you reach your desired timer duration.** The timer will start automatically. Press **Escape** while dragging to cancel.
 4.  **(Optional) Enable Reminders Sync in Preferences.** Access preferences by right-clicking the menu bar icon and selecting "Preferences".
 
 ## Contributing

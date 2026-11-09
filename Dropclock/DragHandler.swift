@@ -125,7 +125,10 @@ extension AppDelegate {
   }
 
   internal func beginStatusItemTracking() {
-    guard !isTrackingStatusItem, mouseDownStartedOnStatusItem() else { return }
+    guard mouseDownStartedOnStatusItem() else { return }
+    if isTrackingStatusItem {
+      endStatusItemTracking(cancelled: true)
+    }
     isTrackingStatusItem = true
     baseTime = Date()
     dragTimeInterval = 0
@@ -133,7 +136,12 @@ extension AppDelegate {
     dragStartLocation = NSEvent.mouseLocation
     statusItem?.button?.highlight(true)
     trackingSawMouseDown = NSEvent.pressedMouseButtons & (1 << 0) != 0
+    trackingStartedAt = Date()
     installStatusItemMouseMonitors()
+    guard isTrackingStatusItem else {
+      removeStatusItemMouseMonitors()
+      return
+    }
     startTrackingPollTimer()
   }
 
@@ -229,7 +237,13 @@ extension AppDelegate {
   }
 
   internal func endStatusItemTracking(cancelled: Bool) {
-    guard isTrackingStatusItem else { return }
+    guard isTrackingStatusItem else {
+      removeStatusItemMouseMonitors()
+      removeDragTimerPanel()
+      removeDragLine()
+      statusItem?.button?.highlight(false)
+      return
+    }
     if !cancelled {
       updateStatusItemTracking()
     }
@@ -243,6 +257,7 @@ extension AppDelegate {
     let interval = dragTimeInterval
     dragTimeInterval = 0
     dragStartLocation = nil
+    trackingStartedAt = nil
 
     cancelExpandedInterfaceSession()
     updateStatusIcon()
@@ -317,20 +332,35 @@ extension AppDelegate {
     let leftPressed = NSEvent.pressedMouseButtons & (1 << 0) != 0
     if leftPressed {
       trackingSawMouseDown = true
-    } else if trackingSawMouseDown {
+      return
+    }
+    let trackingDuration = trackingStartedAt.map {
+      Date().timeIntervalSince($0)
+    } ?? 1
+    if trackingSawMouseDown || trackingDuration > 0.5 {
       endStatusItemTracking(cancelled: false)
     }
   }
 
   private func installStatusItemMouseMonitors() {
     removeStatusItemMouseMonitors()
-    let mask: NSEvent.EventTypeMask = [.leftMouseDragged, .leftMouseUp]
-    statusItemLocalMonitor = NSEvent.addLocalMonitorForEvents(matching: mask) {
+    let localMask: NSEvent.EventTypeMask = [
+      .leftMouseDragged, .leftMouseUp, .keyDown,
+    ]
+    statusItemLocalMonitor = NSEvent.addLocalMonitorForEvents(matching: localMask) {
       [weak self] event in
-      self?.handleTrackedMouseEvent(event)
+      guard let self else { return event }
+      if event.type == .keyDown && event.keyCode == 53
+        && self.isTrackingStatusItem
+      {
+        self.endStatusItemTracking(cancelled: true)
+        return nil
+      }
+      self.handleTrackedMouseEvent(event)
       return event
     }
-    statusItemGlobalMonitor = NSEvent.addGlobalMonitorForEvents(matching: mask)
+    let globalMask: NSEvent.EventTypeMask = [.leftMouseDragged, .leftMouseUp]
+    statusItemGlobalMonitor = NSEvent.addGlobalMonitorForEvents(matching: globalMask)
     { [weak self] event in
       self?.handleTrackedMouseEvent(event)
     }
